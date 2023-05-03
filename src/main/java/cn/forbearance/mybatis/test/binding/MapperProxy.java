@@ -1,9 +1,10 @@
 package cn.forbearance.mybatis.test.binding;
 
+import cn.forbearance.mybatis.test.session.SqlSession;
+
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.util.Map;
 
 /**
  * 映射器代理类
@@ -19,11 +20,11 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     /**
      * 可以理解为【接口名称+方法名称作为key】
      */
-    private Map<String, String> sqlSession;
+    private SqlSession sqlSession;
 
     private final Class<T> mapperInterface;
 
-    public MapperProxy(Map<String, String> sqlSession, Class<T> mapperInterface) {
+    public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface) {
         this.sqlSession = sqlSession;
         this.mapperInterface = mapperInterface;
     }
@@ -32,7 +33,8 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (Object.class.equals(method.getDeclaringClass())) {
             return method.invoke(this, args);
+        } else {
+            return sqlSession.selectOne(mapperInterface.getName(), args);
         }
-        return "你的被代理了！" + sqlSession.get(mapperInterface.getName() + "." + method.getName());
     }
 }

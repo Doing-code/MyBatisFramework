@@ -1,6 +1,10 @@
 package cn.forbearance.mybatis.test;
 
 import cn.forbearance.mybatis.test.binding.MapperProxyFactory;
+import cn.forbearance.mybatis.test.binding.MapperRegistry;
+import cn.forbearance.mybatis.test.dao.IUserDao;
+import cn.forbearance.mybatis.test.session.SqlSession;
+import cn.forbearance.mybatis.test.session.defaults.DefaultSqlSessionFactory;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +21,12 @@ public class ApiTest {
 
     @Test
     public void test_MapperProxyFactory() {
-        MapperProxyFactory<IUserDao> factory = new MapperProxyFactory<>(IUserDao.class);
-        Map<String, String> sqlSession = new HashMap<>();
+        MapperRegistry registry = new MapperRegistry();
+        registry.addMappers("cn.forbearance.mybatis.test.dao");
 
-        sqlSession.put("cn.forbearance.mybatis.test.IUserDao.queryUserName", "模拟执行 Mapper.xml 中 SQL 语句的操作：查询用户姓名");
-        sqlSession.put("cn.forbearance.mybatis.test.IUserDao.queryUserAge", "模拟执行 Mapper.xml 中 SQL 语句的操作：查询用户年龄");
-        IUserDao userDao = factory.newInstance(sqlSession);
+        DefaultSqlSessionFactory sqlSessionFactory = new DefaultSqlSessionFactory(registry);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
         String res = userDao.queryUserName("10001");
         logger.info("测试结果：{}", res);

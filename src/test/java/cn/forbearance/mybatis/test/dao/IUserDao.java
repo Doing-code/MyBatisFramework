@@ -1,4 +1,4 @@
-package cn.forbearance.mybatis.test;
+package cn.forbearance.mybatis.test.dao;
 
 /**
  * @author cristina
