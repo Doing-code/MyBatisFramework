@@ -1,4 +1,4 @@
-package cn.forbearance.mybatis.test.io;
+package cn.forbearance.mybatis.io;
 
 import java.io.IOException;
 import java.io.InputStream;

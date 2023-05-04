@@ -1,4 +1,4 @@
-package cn.forbearance.mybatis.test.session;
+package cn.forbearance.mybatis.session;
 
 /**
  * SqlSession 用来执行SQL，获取映射器，管理事务

@@ -1,9 +1,9 @@
-package cn.forbearance.mybatis.test.binding;
+package cn.forbearance.mybatis.binding;
 
-import cn.forbearance.mybatis.test.mapping.MappedStatement;
-import cn.forbearance.mybatis.test.mapping.SqlCommandType;
-import cn.forbearance.mybatis.test.session.Configuration;
-import cn.forbearance.mybatis.test.session.SqlSession;
+import cn.forbearance.mybatis.mapping.MappedStatement;
+import cn.forbearance.mybatis.mapping.SqlCommandType;
+import cn.forbearance.mybatis.session.Configuration;
+import cn.forbearance.mybatis.session.SqlSession;
 
 import java.lang.reflect.Method;
 

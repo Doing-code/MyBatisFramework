@@ -1,4 +1,4 @@
-package cn.forbearance.mybatis.test.mapping;
+package cn.forbearance.mybatis.mapping;
 
 /**
  * SQL 指令类型

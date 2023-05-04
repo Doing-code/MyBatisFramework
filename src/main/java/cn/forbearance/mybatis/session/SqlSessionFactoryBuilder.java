@@ -1,7 +1,7 @@
-package cn.forbearance.mybatis.test.session;
+package cn.forbearance.mybatis.session;
 
-import cn.forbearance.mybatis.test.builder.xml.XmlConfigBuilder;
-import cn.forbearance.mybatis.test.session.defaults.DefaultSqlSessionFactory;
+import cn.forbearance.mybatis.builder.xml.XmlConfigBuilder;
+import cn.forbearance.mybatis.session.defaults.DefaultSqlSessionFactory;
 
 import java.io.Reader;
 

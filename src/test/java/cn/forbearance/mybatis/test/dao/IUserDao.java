@@ -1,11 +1,11 @@
 package cn.forbearance.mybatis.test.dao;
 
+import cn.forbearance.mybatis.test.po.User;
+
 /**
  * @author cristina
  */
 public interface IUserDao {
 
-    String queryUserName(String uId);
-
-    String queryUserAge(String uId);
+    User queryUserInfoById(Long uId);
 }

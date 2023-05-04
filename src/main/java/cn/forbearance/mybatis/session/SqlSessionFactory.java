@@ -1,4 +1,4 @@
-package cn.forbearance.mybatis.test.session;
+package cn.forbearance.mybatis.session;
 
 /**
  * 工厂模式接口，构建 SqlSession 的工厂

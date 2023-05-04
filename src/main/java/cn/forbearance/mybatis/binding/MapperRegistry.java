@@ -1,7 +1,7 @@
-package cn.forbearance.mybatis.test.binding;
+package cn.forbearance.mybatis.binding;
 
-import cn.forbearance.mybatis.test.session.Configuration;
-import cn.forbearance.mybatis.test.session.SqlSession;
+import cn.forbearance.mybatis.session.SqlSession;
+import cn.forbearance.mybatis.session.Configuration;
 import cn.hutool.core.lang.ClassScanner;
 
 import java.util.HashMap;

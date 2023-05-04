@@ -1,6 +1,6 @@
-package cn.forbearance.mybatis.test.binding;
+package cn.forbearance.mybatis.binding;
 
-import cn.forbearance.mybatis.test.session.SqlSession;
+import cn.forbearance.mybatis.session.SqlSession;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
