@@ -1,6 +1,8 @@
 package cn.forbearance.mybatis.test.session.defaults;
 
 import cn.forbearance.mybatis.test.binding.MapperRegistry;
+import cn.forbearance.mybatis.test.mapping.MappedStatement;
+import cn.forbearance.mybatis.test.session.Configuration;
 import cn.forbearance.mybatis.test.session.SqlSession;
 
 /**
@@ -9,6 +11,12 @@ import cn.forbearance.mybatis.test.session.SqlSession;
  * @author cristina
  */
 public class DefaultSqlSession implements SqlSession {
+
+    private Configuration configuration;
+
+    public DefaultSqlSession(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     /**
      * 映射器注册机
@@ -26,11 +34,17 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public <T> T selectOne(String statement, Object parameter) {
-        return (T) ("你被代理了！" + "方法：" + statement + " 入参：" + parameter);
+        MappedStatement mappedStatement = configuration.getMappedStatement(statement);
+        return (T) ("你被代理了！" + "\n方法：" + statement + "\n入参：" + parameter + "\n待执行SQL：" + mappedStatement.getSql());
     }
 
     @Override
     public <T> T getMapper(Class<T> type) {
-        return mapperRegistry.getMapper(type, this);
+        return configuration.getMapper(type, this);
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
     }
 }

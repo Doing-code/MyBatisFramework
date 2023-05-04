@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.test.binding;
 
+import cn.forbearance.mybatis.test.session.Configuration;
 import cn.forbearance.mybatis.test.session.SqlSession;
 import cn.hutool.core.lang.ClassScanner;
 
@@ -15,6 +16,12 @@ import java.util.Set;
  * @author cristina
  */
 public class MapperRegistry {
+
+    private Configuration configuration;
+
+    public MapperRegistry(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
     /**
      * 添加映射器代理

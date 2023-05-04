@@ -36,4 +36,11 @@ public interface SqlSession {
      * @return 绑定到这个SqlSession的映射器
      */
     <T> T getMapper(Class<T> type);
+
+    /**
+     * #
+     *
+     * @return
+     */
+    Configuration getConfiguration();
 }
