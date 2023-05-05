@@ -2,6 +2,8 @@ package cn.forbearance.mybatis.session;
 
 import cn.forbearance.mybatis.binding.MapperRegistry;
 import cn.forbearance.mybatis.datasource.druid.DruidDataSourceFactory;
+import cn.forbearance.mybatis.datasource.pooled.PooledDataSourceFactory;
+import cn.forbearance.mybatis.datasource.unpooled.UnPooledDataSourceFactory;
 import cn.forbearance.mybatis.mapping.Environment;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.transaction.jdbc.JdbcTransactionFactory;
@@ -38,6 +40,8 @@ public class Configuration {
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
         typeAliasRegistry.registerAlias("DRUID", DruidDataSourceFactory.class);
+        typeAliasRegistry.registerAlias("UNPOOLED", UnPooledDataSourceFactory.class);
+        typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
     }
 
     public void addMappers(String packageName) {
