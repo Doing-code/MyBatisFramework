@@ -1,8 +1,15 @@
 package cn.forbearance.mybatis.session.defaults;
 
+import cn.forbearance.mybatis.executor.Executor;
+import cn.forbearance.mybatis.mapping.Environment;
 import cn.forbearance.mybatis.session.SqlSession;
 import cn.forbearance.mybatis.session.Configuration;
 import cn.forbearance.mybatis.session.SqlSessionFactory;
+import cn.forbearance.mybatis.session.TransactionIsolationLevel;
+import cn.forbearance.mybatis.transaction.Transaction;
+import cn.forbearance.mybatis.transaction.TransactionFactory;
+
+import java.sql.SQLException;
 
 /**
  * 默认的简单工厂实现，处理开启 SqlSession 时，
@@ -21,6 +28,22 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
     @Override
     public SqlSession openSession() {
-        return new DefaultSqlSession(configuration);
+        Transaction tx = null;
+        try {
+            final Environment environment = configuration.getEnvironment();
+            final TransactionFactory transactionFactory = environment.getTransactionFactory();
+            tx = transactionFactory.newTransaction(environment.getDataSource(), TransactionIsolationLevel.READ_COMMITTED, false);
+            // 创建执行器
+            final Executor executor = configuration.newExecutor(tx);
+            // 创建 DefaultSqlSession
+            return new DefaultSqlSession(configuration, executor);
+        } catch (Exception e) {
+            try {
+                assert tx != null;
+                tx.close();
+            } catch (SQLException ignore) {
+            }
+            throw new RuntimeException("Error opening session.  Cause: " + e);
+        }
     }
 }

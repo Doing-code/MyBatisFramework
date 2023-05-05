@@ -4,8 +4,16 @@ import cn.forbearance.mybatis.binding.MapperRegistry;
 import cn.forbearance.mybatis.datasource.druid.DruidDataSourceFactory;
 import cn.forbearance.mybatis.datasource.pooled.PooledDataSourceFactory;
 import cn.forbearance.mybatis.datasource.unpooled.UnPooledDataSourceFactory;
+import cn.forbearance.mybatis.executor.Executor;
+import cn.forbearance.mybatis.executor.SimpleExecutor;
+import cn.forbearance.mybatis.executor.resultset.DefaultResultSetHandler;
+import cn.forbearance.mybatis.executor.resultset.ResultSetHandler;
+import cn.forbearance.mybatis.executor.statement.PreparedStatementHandler;
+import cn.forbearance.mybatis.executor.statement.StatementHandler;
+import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.Environment;
 import cn.forbearance.mybatis.mapping.MappedStatement;
+import cn.forbearance.mybatis.transaction.Transaction;
 import cn.forbearance.mybatis.transaction.jdbc.JdbcTransactionFactory;
 import cn.forbearance.mybatis.type.TypeAliasRegistry;
 
@@ -78,5 +86,17 @@ public class Configuration {
 
     public void setEnvironment(Environment environment) {
         this.environment = environment;
+    }
+
+    public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement ms, BoundSql boundSql) {
+        return new DefaultResultSetHandler(executor, ms, boundSql);
+    }
+
+    public Executor newExecutor(Transaction transaction) {
+        return new SimpleExecutor(this, transaction);
+    }
+
+    public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, ResultHandler resultHandler, BoundSql boundSql) {
+        return new PreparedStatementHandler(executor, ms, parameter, resultHandler, boundSql);
     }
 }
