@@ -1,6 +1,7 @@
 package cn.forbearance.mybatis.executor.statement;
 
 import cn.forbearance.mybatis.executor.Executor;
+import cn.forbearance.mybatis.executor.parameter.ParameterHandler;
 import cn.forbearance.mybatis.executor.resultset.ResultSetHandler;
 import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.MappedStatement;
@@ -28,6 +29,8 @@ public abstract class BaseStatementHandler implements StatementHandler {
 
     protected final ResultSetHandler resultSetHandler;
 
+    protected final ParameterHandler parameterHandler;
+
     protected BoundSql boundSql;
 
     public BaseStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, ResultHandler resultHandler, BoundSql boundSql) {
@@ -37,6 +40,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
         this.parameterObject = parameterObject;
         this.boundSql = boundSql;
         this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, boundSql);
+        this.parameterHandler = configuration.newParameterHandler(mappedStatement, parameterObject, boundSql);
     }
 
     @Override

@@ -18,8 +18,8 @@ public enum JdbcType {
     DOUBLE(Types.DOUBLE),
     DECIMAL(Types.DECIMAL),
     VARCHAR(Types.VARCHAR),
+    CHAR(Types.CHAR),
     TIMESTAMP(Types.TIMESTAMP);
-
 
     private final int typeCode;
 

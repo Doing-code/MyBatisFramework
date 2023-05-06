@@ -35,7 +35,10 @@ public class ApiTest {
         IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
         // 3. 测试验证
-        User user = userDao.queryUserInfoById(1L);
+        User user1 = new User();
+        user1.setId(1L);
+        user1.setUserId("10001");
+        User user = userDao.queryUserInfo(user1);
         logger.info("测试结果：{}", JSON.toJSONString(user));
 
     }

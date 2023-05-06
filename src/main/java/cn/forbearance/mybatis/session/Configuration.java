@@ -6,6 +6,7 @@ import cn.forbearance.mybatis.datasource.pooled.PooledDataSourceFactory;
 import cn.forbearance.mybatis.datasource.unpooled.UnPooledDataSourceFactory;
 import cn.forbearance.mybatis.executor.Executor;
 import cn.forbearance.mybatis.executor.SimpleExecutor;
+import cn.forbearance.mybatis.executor.parameter.ParameterHandler;
 import cn.forbearance.mybatis.executor.resultset.DefaultResultSetHandler;
 import cn.forbearance.mybatis.executor.resultset.ResultSetHandler;
 import cn.forbearance.mybatis.executor.statement.PreparedStatementHandler;
@@ -18,6 +19,7 @@ import cn.forbearance.mybatis.refection.factory.DefaultObjectFactory;
 import cn.forbearance.mybatis.refection.factory.ObjectFactory;
 import cn.forbearance.mybatis.refection.wapper.DefaultObjectWrapperFactory;
 import cn.forbearance.mybatis.refection.wapper.ObjectWrapperFactory;
+import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.scripting.LanguageDriverRegistry;
 import cn.forbearance.mybatis.scripting.xmltags.XmlLanguageDriver;
 import cn.forbearance.mybatis.transaction.Transaction;
@@ -164,7 +166,13 @@ public class Configuration {
         return databaseId;
     }
 
-    public void setDatabaseId(String databaseId) {
-        this.databaseId = databaseId;
+    public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+        // 创建参数处理器， 插件的一些参数，也是在这里处理，暂时不添加这部分内容 interceptorChain.pluginAll(parameterHandler);
+        return mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
     }
+
+    public LanguageDriver getDefaultScriptingLanguageInstance() {
+        return languageRegistry.getDefaultDriver();
+    }
+
 }

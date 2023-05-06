@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.mapping;
 
+import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.session.Configuration;
 
 /**
@@ -19,6 +20,8 @@ public class MappedStatement {
 
     Class<?> resultType;
 
+    private LanguageDriver lang;
+
     public MappedStatement() {
     }
 
@@ -34,6 +37,7 @@ public class MappedStatement {
             mappedStatement.sqlCommandType = sqlCommandType;
             mappedStatement.sqlSource = sqlSource;
             mappedStatement.resultType = resultType;
+            mappedStatement.lang = configuration.getDefaultScriptingLanguageInstance();
         }
 
         public MappedStatement build() {
@@ -62,5 +66,9 @@ public class MappedStatement {
 
     public Class<?> getResultType() {
         return resultType;
+    }
+
+    public LanguageDriver getLang() {
+        return lang;
     }
 }

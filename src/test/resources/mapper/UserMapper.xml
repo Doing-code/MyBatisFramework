@@ -5,7 +5,13 @@
     <select id="queryUserInfoById" parameterType="java.lang.Long" resultType="cn.forbearance.mybatis.test.po.User">
         SELECT id, userId, userHead, createTime
         FROM user
-        where id = #{id}
+        where id = #{0}
+    </select>
+
+    <select id="queryUserInfo" parameterType="cn.forbearance.mybatis.test.po.User" resultType="cn.forbearance.mybatis.test.po.User">
+        SELECT id, userId, userName, userHead
+        FROM user
+        where id = #{id} and userId = #{userId}
     </select>
 
 </mapper>
