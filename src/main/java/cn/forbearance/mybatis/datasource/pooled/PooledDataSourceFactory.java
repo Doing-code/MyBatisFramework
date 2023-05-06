@@ -16,13 +16,7 @@ public class PooledDataSourceFactory extends UnPooledDataSourceFactory {
      *
      * @return
      */
-    @Override
-    public DataSource getDataSource() {
-        PooledDataSource dataSource = new PooledDataSource();
-        dataSource.setDriver(properties.getProperty("driver"));
-        dataSource.setUrl(properties.getProperty("url"));
-        dataSource.setUsername(properties.getProperty("username"));
-        dataSource.setPassword(properties.getProperty("password"));
-        return dataSource;
+    public PooledDataSourceFactory() {
+        this.dataSource = new PooledDataSource();
     }
 }
