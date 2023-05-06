@@ -31,11 +31,12 @@ public class ParameterMapping {
     }
 
     public static class Builder {
-        private ParameterMapping parameterMapping = new ParameterMapping();
+        private final ParameterMapping parameterMapping = new ParameterMapping();
 
-        public Builder(Configuration configuration, String property) {
+        public Builder(Configuration configuration, String property, Class<?> javaType) {
             parameterMapping.configuration = configuration;
             parameterMapping.property = property;
+            parameterMapping.javaType = javaType;
         }
 
         public Builder javaType(Class<?> javaType) {
@@ -46,6 +47,10 @@ public class ParameterMapping {
         public Builder javaType(JdbcType jdbcType) {
             parameterMapping.jdbcType = jdbcType;
             return this;
+        }
+
+        public ParameterMapping build() {
+            return parameterMapping;
         }
     }
 

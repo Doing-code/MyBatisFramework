@@ -34,8 +34,6 @@ public class ApiTest {
         // 2. 获取映射器对象
         IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
-        System.out.println(sqlSession.getConfiguration().getEnvironment().getDataSource());
-
         // 3. 测试验证
         User user = userDao.queryUserInfoById(1L);
         logger.info("测试结果：{}", JSON.toJSONString(user));

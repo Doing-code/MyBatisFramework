@@ -1,5 +1,7 @@
 package cn.forbearance.mybatis.type;
 
+import cn.forbearance.mybatis.io.Resources;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -11,7 +13,7 @@ import java.util.Map;
  */
 public class TypeAliasRegistry {
 
-    private final Map<String, Class<?>> typeAliases = new HashMap<>();
+    private final Map<String, Class<?>> TYPE_ALIASES = new HashMap<>();
 
     public TypeAliasRegistry() {
         // 构造函数里注册系统内置的类型别名
@@ -30,11 +32,25 @@ public class TypeAliasRegistry {
 
     public void registerAlias(String alias, Class<?> clazz) {
         String key = alias.toLowerCase(Locale.ENGLISH);
-        typeAliases.put(key, clazz);
+        TYPE_ALIASES.put(key, clazz);
     }
 
     public <T> Class<T> resolveAlias(String string) {
-        String key = string.toLowerCase(Locale.ENGLISH);
-        return (Class<T>) typeAliases.get(key);
+        String key = null;
+        try {
+            if (string == null) {
+                return null;
+            }
+            key = string.toLowerCase(Locale.ENGLISH);
+            Class<T> value;
+            if (TYPE_ALIASES.containsKey(key)) {
+                value = (Class<T>) TYPE_ALIASES.get(key);
+            } else {
+                value = (Class<T>) Resources.classForName(string);
+            }
+            return value;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Could not resolve type alias '" + string + "'.  Cause: " + e, e);
+        }
     }
 }

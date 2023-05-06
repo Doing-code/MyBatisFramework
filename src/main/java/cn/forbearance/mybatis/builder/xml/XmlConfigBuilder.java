@@ -9,6 +9,7 @@ import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.mapping.SqlCommandType;
 import cn.forbearance.mybatis.session.Configuration;
 import cn.forbearance.mybatis.transaction.TransactionFactory;
+import jdk.internal.util.xml.impl.Input;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -16,13 +17,14 @@ import org.dom4j.io.SAXReader;
 import org.xml.sax.InputSource;
 
 import javax.sql.DataSource;
+import java.io.InputStream;
 import java.io.Reader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * XML 配置构建器
+ * XML 配置构建器，建造者模式
  *
  * @author cristina
  */
@@ -102,50 +104,21 @@ public class XmlConfigBuilder extends BaseBuilder {
         }
     }
 
+    /**
+     * <mappers>
+     * <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
+     * <mapper resource="org/mybatis/builder/BlogMapper.xml"/>
+     * <mapper resource="org/mybatis/builder/PostMapper.xml"/>
+     * </mappers>
+     */
     private void mapperElement(Element element) throws Exception {
         List<Element> mappers = element.elements("mapper");
         for (Element e : mappers) {
             // TODO 解析处理，具体参照源码
             String resource = e.attributeValue("resource");
-            Reader reader = Resources.getResourceAsReader(resource);
-            SAXReader saxReader = new SAXReader();
-            Document document = saxReader.read(new InputSource(reader));
-            Element root = document.getRootElement();
-            String namespace = root.attributeValue("namespace");
-
-            List<Element> selectNodes = root.elements("select");
-            for (Element node : selectNodes) {
-                String id = node.attributeValue("id");
-                String parameterType = node.attributeValue("parameterType");
-                String resultType = node.attributeValue("resultType");
-                String sql = node.getText();
-
-                // 匹配占位符
-                Map<Integer, String> parameter = new HashMap<>();
-                Pattern pattern = Pattern.compile("(#\\{(.*?)})");
-                Matcher matcher = pattern.matcher(sql);
-                for (int i = 1; matcher.find(); i++) {
-                    String g1 = matcher.group(1);
-                    String g2 = matcher.group(2);
-                    parameter.put(i, g2);
-                    sql = sql.replace(g1, "?");
-                }
-
-                String msId = namespace + "." + id;
-                String nodeName = node.getName();
-                SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
-                BoundSql boundSql = new BoundSql(sql, parameter, parameterType, resultType);
-                MappedStatement mappedStatement = new MappedStatement.Builder(
-                        configuration,
-                        msId,
-                        sqlCommandType,
-                        boundSql).build();
-
-                // 添加解析 SQL
-                configuration.addMappedStatement(mappedStatement);
-            }
-            // 注册Mapper映射器
-            configuration.addMapper(Resources.classForName(namespace));
+            InputStream is = Resources.getResourceAsStream(resource);
+            XmlMapperBuilder parse = new XmlMapperBuilder(is, configuration, resource);
+            parse.parse();
         }
     }
 }

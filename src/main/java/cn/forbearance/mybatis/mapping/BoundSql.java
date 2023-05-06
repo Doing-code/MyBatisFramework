@@ -1,5 +1,10 @@
 package cn.forbearance.mybatis.mapping;
 
+import cn.forbearance.mybatis.refection.MetaObject;
+import cn.forbearance.mybatis.session.Configuration;
+
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,48 +15,39 @@ public class BoundSql {
 
     private String sql;
 
-    private Map<Integer, String> parameterMappings;
+    private List<ParameterMapping> parameterMappings;
 
-    private String parameterType;
+    private Object parameterObject;
 
-    private String resultType;
+    private Map<String, Object> additionalParameters;
 
-    public BoundSql(String sql, Map<Integer, String> parameterMappings, String parameterType, String resultType) {
+    private MetaObject metaParameters;
+
+    public BoundSql(Configuration configuration, String sql, List<ParameterMapping> parameterMappings, Object parameterObject) {
         this.sql = sql;
         this.parameterMappings = parameterMappings;
-        this.parameterType = parameterType;
-        this.resultType = resultType;
+        this.parameterObject = parameterObject;
+        this.additionalParameters = new HashMap<>();
+        this.metaParameters = configuration.newMetaObject(additionalParameters);
     }
 
     public String getSql() {
         return sql;
     }
 
-    public void setSql(String sql) {
-        this.sql = sql;
-    }
-
-    public Map<Integer, String> getParameterMappings() {
+    public List<ParameterMapping> getParameterMappings() {
         return parameterMappings;
     }
 
-    public void setParameterMappings(Map<Integer, String> parameterMappings) {
-        this.parameterMappings = parameterMappings;
+    public Object getParameterObject() {
+        return parameterObject;
     }
 
-    public String getParameterType() {
-        return parameterType;
+    public Map<String, Object> getAdditionalParameters() {
+        return additionalParameters;
     }
 
-    public void setParameterType(String parameterType) {
-        this.parameterType = parameterType;
-    }
-
-    public String getResultType() {
-        return resultType;
-    }
-
-    public void setResultType(String resultType) {
-        this.resultType = resultType;
+    public MetaObject getMetaParameters() {
+        return metaParameters;
     }
 }
