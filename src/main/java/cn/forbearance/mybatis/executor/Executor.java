@@ -3,6 +3,7 @@ package cn.forbearance.mybatis.executor;
 import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.session.ResultHandler;
+import cn.forbearance.mybatis.session.RowBounds;
 import cn.forbearance.mybatis.transaction.Transaction;
 
 import java.sql.SQLException;
@@ -33,12 +34,13 @@ public interface Executor {
      *
      * @param ms
      * @param parameter
+     * @param rowBounds
      * @param resultHandler
      * @param boundSql
      * @param <E>
      * @return
      */
-    <E> List<E> query(MappedStatement ms, Object parameter, ResultHandler resultHandler, BoundSql boundSql);
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql);
 
     /**
      * #

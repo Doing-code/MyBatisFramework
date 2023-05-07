@@ -1,6 +1,7 @@
 package cn.forbearance.mybatis.builder.xml;
 
 import cn.forbearance.mybatis.builder.BaseBuilder;
+import cn.forbearance.mybatis.builder.MapperBuilderAssistant;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.mapping.SqlCommandType;
 import cn.forbearance.mybatis.mapping.SqlSource;
@@ -18,14 +19,14 @@ import java.util.Locale;
  */
 public class XmlStatementBuilder extends BaseBuilder {
 
-    private String currentNamespace;
+    private MapperBuilderAssistant builderAssistant;
 
     private Element element;
 
-    public XmlStatementBuilder(Configuration configuration, Element element, String currentNamespace) {
+    public XmlStatementBuilder(Configuration configuration, MapperBuilderAssistant builderAssistant, Element element) {
         super(configuration);
         this.element = element;
-        this.currentNamespace = currentNamespace;
+        this.builderAssistant = builderAssistant;
     }
 
     /**
@@ -47,24 +48,30 @@ public class XmlStatementBuilder extends BaseBuilder {
      */
     public void parseStatementNode() {
         String id = element.attributeValue("id");
+        // 参数类型
         String parameterType = element.attributeValue("parameterType");
         Class<?> parameterTypeClass = resolveAlias(parameterType);
+        // resultMap
+        String resultMap = element.attributeValue("resultMap");
+        // 结果类型
         String resultType = element.attributeValue("resultType");
         Class<?> resultTypeClass = resolveAlias(resultType);
         // (select|update|insert|delete)
         String nodeName = element.getName();
         SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
+
         // 获取默认语言驱动器
         Class<?> landClass = configuration.getLanguageRegistry().getDefaultDriverClass();
         LanguageDriver langDriver = configuration.getLanguageRegistry().getDriver(landClass);
 
+        // 解析成SqlSource，DynamicSqlSource/RawSqlSource【#{}替换为?】
         SqlSource sqlSource = langDriver.createSqlSource(configuration, element, parameterTypeClass);
-        MappedStatement mappedStatement = new MappedStatement.Builder(configuration,
-                currentNamespace + "." + id,
-                sqlCommandType,
+        builderAssistant.addMappedStatement(id,
                 sqlSource,
-                resultTypeClass).build();
-        // 添加【解析SQL】
-        configuration.addMappedStatement(mappedStatement);
+                sqlCommandType,
+                parameterTypeClass,
+                resultMap,
+                resultTypeClass,
+                langDriver);
     }
 }

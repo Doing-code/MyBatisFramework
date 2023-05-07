@@ -1,6 +1,7 @@
 package cn.forbearance.mybatis.builder.xml;
 
 import cn.forbearance.mybatis.builder.BaseBuilder;
+import cn.forbearance.mybatis.builder.MapperBuilderAssistant;
 import cn.forbearance.mybatis.io.Resources;
 import cn.forbearance.mybatis.session.Configuration;
 import org.dom4j.Document;
@@ -22,7 +23,10 @@ public class XmlMapperBuilder extends BaseBuilder {
 
     private String resource;
 
-    private String currentNamespace;
+    /**
+     * 映射器建造助手
+     */
+    private MapperBuilderAssistant builderAssistant;
 
     public XmlMapperBuilder(InputStream inputStream, Configuration configuration, String resource) throws DocumentException {
         this(new SAXReader().read(inputStream), configuration, resource);
@@ -32,6 +36,7 @@ public class XmlMapperBuilder extends BaseBuilder {
         super(configuration);
         this.element = document.getRootElement();
         this.resource = resource;
+        this.builderAssistant = new MapperBuilderAssistant(configuration, resource);
     }
 
     /**
@@ -46,7 +51,7 @@ public class XmlMapperBuilder extends BaseBuilder {
             // 标记已加载
             configuration.addLoadedResource(resource);
             // 绑定映射器到 namespace
-            configuration.addMapper(Resources.classForName(currentNamespace));
+            configuration.addMapper(Resources.classForName(builderAssistant.getCurrentNamespace()));
         }
     }
 
@@ -61,10 +66,12 @@ public class XmlMapperBuilder extends BaseBuilder {
      * @param element
      */
     private void configurationElement(Element element) {
-        currentNamespace = element.attributeValue("namespace");
-        if ("".equals(currentNamespace)) {
+        String namespace = element.attributeValue("namespace");
+        if ("".equals(namespace)) {
             throw new RuntimeException("Mapper's namespace cannot be empty");
         }
+        builderAssistant.setCurrentNamespace(namespace);
+        // select|insert|update|delete
         buildStatementFromContext(element.elements("select"));
     }
 
@@ -75,7 +82,7 @@ public class XmlMapperBuilder extends BaseBuilder {
      */
     private void buildStatementFromContext(List<Element> list) {
         for (Element element : list) {
-            final XmlStatementBuilder builder = new XmlStatementBuilder(configuration, element, currentNamespace);
+            final XmlStatementBuilder builder = new XmlStatementBuilder(configuration, builderAssistant, element);
             builder.parseStatementNode();
         }
     }

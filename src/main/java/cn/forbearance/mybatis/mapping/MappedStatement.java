@@ -3,6 +3,8 @@ package cn.forbearance.mybatis.mapping;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.session.Configuration;
 
+import java.util.List;
+
 /**
  * 映射语句类
  *
@@ -21,6 +23,8 @@ public class MappedStatement {
     Class<?> resultType;
 
     private LanguageDriver lang;
+
+    private List<ResultMap> resultMaps;
 
     public MappedStatement() {
     }
@@ -44,6 +48,15 @@ public class MappedStatement {
             assert mappedStatement.configuration != null;
             assert mappedStatement.id != null;
             return mappedStatement;
+        }
+
+        public String id() {
+            return mappedStatement.id;
+        }
+
+        public Builder resultMaps(List<ResultMap> resultMaps) {
+            mappedStatement.resultMaps = resultMaps;
+            return this;
         }
 
     }
@@ -70,5 +83,9 @@ public class MappedStatement {
 
     public LanguageDriver getLang() {
         return lang;
+    }
+
+    public List<ResultMap> getResultMaps() {
+        return resultMaps;
     }
 }

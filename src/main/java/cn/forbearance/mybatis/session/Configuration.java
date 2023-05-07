@@ -119,16 +119,16 @@ public class Configuration {
         this.environment = environment;
     }
 
-    public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement ms, BoundSql boundSql) {
-        return new DefaultResultSetHandler(executor, ms, boundSql);
+    public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+        return new DefaultResultSetHandler(executor, mappedStatement, resultHandler, rowBounds, boundSql);
     }
 
     public Executor newExecutor(Transaction transaction) {
         return new SimpleExecutor(this, transaction);
     }
 
-    public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, ResultHandler resultHandler, BoundSql boundSql) {
-        return new PreparedStatementHandler(executor, ms, parameter, resultHandler, boundSql);
+    public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+        return new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
     }
 
     /**
@@ -166,8 +166,15 @@ public class Configuration {
         return databaseId;
     }
 
+    /**
+     * 创建参数处理器， 插件的一些参数，也是在这里处理，暂时不添加这部分内容 interceptorChain.pluginAll(parameterHandler);
+     *
+     * @param mappedStatement
+     * @param parameterObject
+     * @param boundSql
+     * @return
+     */
     public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
-        // 创建参数处理器， 插件的一些参数，也是在这里处理，暂时不添加这部分内容 interceptorChain.pluginAll(parameterHandler);
         return mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
     }
 
@@ -175,4 +182,7 @@ public class Configuration {
         return languageRegistry.getDefaultDriver();
     }
 
+    public ObjectFactory getObjectFactory() {
+        return objectFactory;
+    }
 }

@@ -3,6 +3,7 @@ package cn.forbearance.mybatis.session.defaults;
 import cn.forbearance.mybatis.executor.Executor;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.session.Configuration;
+import cn.forbearance.mybatis.session.RowBounds;
 import cn.forbearance.mybatis.session.SqlSession;
 import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ public class DefaultSqlSession implements SqlSession {
     public <T> T selectOne(String statement, Object parameter) {
         log.info("执行查询 statement：{} parameter：{}", statement, JSON.toJSONString(parameter));
         MappedStatement ms = configuration.getMappedStatement(statement);
-        List<T> list = executor.query(ms, parameter, Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));
+        List<T> list = executor.query(ms, parameter, RowBounds.DEFAULT, Executor.NO_RESULT_HANDLER, ms.getSqlSource().getBoundSql(parameter));
         return list.get(0);
     }
 
