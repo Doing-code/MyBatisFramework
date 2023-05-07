@@ -61,6 +61,10 @@ public class MappedStatement {
 
     }
 
+    public BoundSql getBoundSql(Object parameterObject) {
+        return sqlSource.getBoundSql(parameterObject);
+    }
+
     public Configuration getConfiguration() {
         return configuration;
     }

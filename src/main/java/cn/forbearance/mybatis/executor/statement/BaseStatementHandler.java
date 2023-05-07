@@ -33,8 +33,12 @@ public abstract class BaseStatementHandler implements StatementHandler {
         this.configuration = mappedStatement.getConfiguration();
         this.executor = executor;
         this.mappedStatement = mappedStatement;
-        this.boundSql = boundSql;
         this.rowBounds = rowBounds;
+
+        if (boundSql == null) {
+            boundSql = mappedStatement.getBoundSql(parameterObject);
+        }
+        this.boundSql = boundSql;
 
         this.parameterObject = parameterObject;
         this.resultSetHandler = configuration.newResultSetHandler(executor, mappedStatement, rowBounds, resultHandler, boundSql);
@@ -44,6 +48,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
     @Override
     public Statement prepare(Connection connection) throws SQLException {
         try {
+            // 实例化 Statement
             Statement statement = instantiateStatement(connection);
             statement.setQueryTimeout(350);
             statement.setFetchSize(10000);

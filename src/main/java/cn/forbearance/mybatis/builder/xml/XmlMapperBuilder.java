@@ -72,18 +72,23 @@ public class XmlMapperBuilder extends BaseBuilder {
         }
         builderAssistant.setCurrentNamespace(namespace);
         // select|insert|update|delete
-        buildStatementFromContext(element.elements("select"));
+        buildStatementFromContext(element.elements("select"),
+                element.elements("insert"),
+                element.elements("update"),
+                element.elements("delete"));
     }
 
     /**
      * select|insert|update|delete
      *
-     * @param list
+     * @param lists
      */
-    private void buildStatementFromContext(List<Element> list) {
-        for (Element element : list) {
-            final XmlStatementBuilder builder = new XmlStatementBuilder(configuration, builderAssistant, element);
-            builder.parseStatementNode();
+    private void buildStatementFromContext(List<Element>... lists) {
+        for (List<Element> list : lists) {
+            for (Element element : list) {
+                final XmlStatementBuilder builder = new XmlStatementBuilder(configuration, builderAssistant, element);
+                builder.parseStatementNode();
+            }
         }
     }
 }

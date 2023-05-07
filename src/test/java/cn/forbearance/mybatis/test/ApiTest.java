@@ -35,12 +35,28 @@ public class ApiTest {
         IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
         // 3. 测试验证
-        User user1 = new User();
-        user1.setId(1L);
-        user1.setUserId("10001");
-        User user = userDao.queryUserInfo(user1);
-        logger.info("测试结果：{}", JSON.toJSONString(user));
+        int count = userDao.deleteUserInfoByUserId("10001");
+        sqlSession.commit();
+        logger.info("测试结果：{}", count);
+    }
 
+    @Test
+    public void test_insertUserInfo() throws IOException {
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config.xml"));
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        // 1. 获取映射器对象
+        IUserDao userDao = sqlSession.getMapper(IUserDao.class);
+
+        // 2. 测试验证
+        User user = new User();
+        user.setUserId("10002");
+        user.setUserName("小白");
+        user.setUserHead("1_05");
+        userDao.insertUserInfo(user);
+        logger.info("测试结果：{}", "Insert OK");
+
+        // 3. 提交事务
+        sqlSession.commit();
     }
 
     @Test

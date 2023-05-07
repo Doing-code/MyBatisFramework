@@ -17,6 +17,15 @@ public class User {
     // 创建时间
     private Date createTime;
 
+    public User() {
+    }
+
+    public User(Long id, String userId, String userName) {
+        this.id = id;
+        this.userId = userId;
+        this.userName = userName;
+    }
+
     public Long getId() {
         return id;
     }
