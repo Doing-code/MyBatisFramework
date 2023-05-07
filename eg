@@ -64,3 +64,12 @@ MetaObject，Mybatis在sql参数设置和结果集映射里经常使用到这个
 
 全部基础功能链路串联完毕。
 【扩展点：Map类型映射、一级二级缓存、插件】
+------------------------------------------------------------------------------------------------------------------------
+
+resource、class 不能同时指向同一个文件
+<mappers>
+    <mapper resource="mapper/UserMapper.xml"/>
+    <mapper class="cn.forbearance.mybatis.test.dao.IUserDao"/>
+</mappers>
+UserMapper.xml和cn.forbearance.mybatis.test.dao.IUserDao的namespace都指向IUserDao。
+此时会抛异常：Type interface cn.forbearance.mybatis.test.dao.IUserDao is already known to the MapperRegistry.，重复加载接口

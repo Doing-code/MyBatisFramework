@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.binding;
 
+import cn.forbearance.mybatis.builder.annotation.MapperAnnotationBuilder;
 import cn.forbearance.mybatis.session.SqlSession;
 import cn.forbearance.mybatis.session.Configuration;
 import cn.hutool.core.lang.ClassScanner;
@@ -49,6 +50,10 @@ public class MapperRegistry {
             }
             // 注册映射器代理工厂
             knownMappers.put(type, new MapperProxyFactory<>(type));
+
+            // 解析注解
+            MapperAnnotationBuilder parser = new MapperAnnotationBuilder(configuration, type);
+            parser.parse();
         }
     }
 

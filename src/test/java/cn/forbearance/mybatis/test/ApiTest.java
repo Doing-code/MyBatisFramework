@@ -35,9 +35,9 @@ public class ApiTest {
         IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
         // 3. 测试验证
-        int count = userDao.deleteUserInfoByUserId("10001");
-        sqlSession.commit();
-        logger.info("测试结果：{}", count);
+        List<User> user = userDao.queryUserInfoList();
+//        sqlSession.commit();
+        logger.info("测试结果：{}", JSON.toJSON(user));
     }
 
     @Test

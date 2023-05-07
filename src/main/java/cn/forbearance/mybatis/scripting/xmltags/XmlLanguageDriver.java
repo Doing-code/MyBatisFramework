@@ -6,6 +6,7 @@ import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.mapping.SqlSource;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.scripting.defaults.DefaultParameterHandler;
+import cn.forbearance.mybatis.scripting.defaults.RawSqlSource;
 import cn.forbearance.mybatis.session.Configuration;
 import org.dom4j.Element;
 
@@ -21,6 +22,11 @@ public class XmlLanguageDriver implements LanguageDriver {
         // 用XML脚本构建器解析
         XmlScriptBuilder builder = new XmlScriptBuilder(configuration, script, parameterType);
         return builder.parseScriptNode();
+    }
+
+    @Override
+    public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
+        return new RawSqlSource(configuration, script, parameterType);
     }
 
     @Override

@@ -1,9 +1,6 @@
 package cn.forbearance.mybatis.builder;
 
-import cn.forbearance.mybatis.mapping.MappedStatement;
-import cn.forbearance.mybatis.mapping.ResultMap;
-import cn.forbearance.mybatis.mapping.SqlCommandType;
-import cn.forbearance.mybatis.mapping.SqlSource;
+import cn.forbearance.mybatis.mapping.*;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.session.Configuration;
 
@@ -31,8 +28,15 @@ public class MapperBuilderAssistant extends BaseBuilder {
         if (base == null) {
             return null;
         }
-        if (isReference && base.contains(".")) {
-            return base;
+        if (isReference) {
+            if (base.contains(".")) return base;
+        } else {
+            if (base.startsWith(currentNamespace + ".")) {
+                return base;
+            }
+            if (base.contains(".")) {
+                throw new RuntimeException("Dots are not allowed in element names, please remove it from " + base);
+            }
         }
         return currentNamespace + "." + base;
     }
@@ -50,12 +54,12 @@ public class MapperBuilderAssistant extends BaseBuilder {
      * @return
      */
     public MappedStatement addMappedStatement(String id,
-                                               SqlSource sqlSource,
-                                               SqlCommandType sqlCommandType,
-                                               Class<?> parameterType,
-                                               String resultMap,
-                                               Class<?> resultType,
-                                               LanguageDriver lang) {
+                                              SqlSource sqlSource,
+                                              SqlCommandType sqlCommandType,
+                                              Class<?> parameterType,
+                                              String resultMap,
+                                              Class<?> resultType,
+                                              LanguageDriver lang) {
         // 给id加上 namespace 前缀
         id = applyCurrentNamespace(id, false);
         MappedStatement.Builder statementBuilder = new MappedStatement.Builder(configuration,
@@ -81,7 +85,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
         List<ResultMap> resultMaps = new ArrayList<>();
         if (resultMap != null) {
-            // TODO：暂无Map结果映射配置，
+            String[] resultMapNames = resultMap.split(",");
+            for (String resultMapName : resultMapNames) {
+                resultMaps.add(configuration.getResultMap(resultMapName));
+            }
         } else {
             /*
              * 通常使用 resultType 即可满足大部分场景
@@ -104,5 +111,17 @@ public class MapperBuilderAssistant extends BaseBuilder {
 
     public void setCurrentNamespace(String currentNamespace) {
         this.currentNamespace = currentNamespace;
+    }
+
+    public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings) {
+        ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(
+                configuration,
+                id,
+                type,
+                resultMappings);
+
+        ResultMap resultMap = inlineResultMapBuilder.build();
+        configuration.addResultMap(resultMap);
+        return resultMap;
     }
 }

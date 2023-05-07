@@ -139,11 +139,11 @@ public class MapperMethod {
     }
 
     /**
-     * 参数map，镜头太内部类
+     * 参数map，静态内部类
      *
      * @param <V>
      */
-    private static class ParamMap<V> extends HashMap<String, V> {
+    public static class ParamMap<V> extends HashMap<String, V> {
 
         private static final long serialVersionUID = 1113644503278868642L;
 

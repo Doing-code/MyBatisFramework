@@ -14,6 +14,7 @@ import cn.forbearance.mybatis.executor.statement.StatementHandler;
 import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.Environment;
 import cn.forbearance.mybatis.mapping.MappedStatement;
+import cn.forbearance.mybatis.mapping.ResultMap;
 import cn.forbearance.mybatis.refection.MetaObject;
 import cn.forbearance.mybatis.refection.factory.DefaultObjectFactory;
 import cn.forbearance.mybatis.refection.factory.ObjectFactory;
@@ -73,6 +74,11 @@ public class Configuration {
     protected final Set<String> loadedResources = new HashSet<>();
 
     protected String databaseId;
+
+    /**
+     * 结果映射
+     */
+    protected final Map<String, ResultMap> resultMaps = new HashMap<>();
 
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
@@ -184,5 +190,13 @@ public class Configuration {
 
     public ObjectFactory getObjectFactory() {
         return objectFactory;
+    }
+
+    public ResultMap getResultMap(String id) {
+        return resultMaps.get(id);
+    }
+
+    public void addResultMap(ResultMap resultMap) {
+        resultMaps.put(resultMap.getId(), resultMap);
     }
 }
