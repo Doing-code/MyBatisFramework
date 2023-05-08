@@ -23,7 +23,7 @@ public interface TypeHandler<T> {
     void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
 
     /**
-     * 获取结构集
+     * 获取结构
      *
      * @param rs
      * @param columnName
@@ -31,4 +31,14 @@ public interface TypeHandler<T> {
      * @throws SQLException
      */
     T getResult(ResultSet rs, String columnName) throws SQLException;
+
+    /**
+     * 获取结构
+     *
+     * @param rs
+     * @param columnIndex
+     * @return
+     * @throws SQLException
+     */
+    T getResult(ResultSet rs, int columnIndex) throws SQLException;
 }

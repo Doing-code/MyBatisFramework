@@ -1,6 +1,7 @@
 package cn.forbearance.mybatis.executor.statement;
 
 import cn.forbearance.mybatis.executor.Executor;
+import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
 import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.session.ResultHandler;
@@ -49,6 +50,10 @@ public class PreparedStatementHandler extends BaseStatementHandler {
     public int update(Statement statement) throws SQLException {
         PreparedStatement ps = (PreparedStatement) statement;
         ps.execute();
-        return statement.getUpdateCount();
+        int rows = ps.getUpdateCount();
+        Object parameterObject = boundSql.getParameterObject();
+        KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        keyGenerator.processAfter(executor, mappedStatement, ps, parameterObject);
+        return rows;
     }
 }

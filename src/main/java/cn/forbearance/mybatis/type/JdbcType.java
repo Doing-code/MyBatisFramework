@@ -14,6 +14,7 @@ public enum JdbcType {
      * JDBC 类型
      */
     INTEGER(Types.INTEGER),
+    BIGINT(Types.BIGINT),
     FLOAT(Types.FLOAT),
     DOUBLE(Types.DOUBLE),
     DECIMAL(Types.DECIMAL),

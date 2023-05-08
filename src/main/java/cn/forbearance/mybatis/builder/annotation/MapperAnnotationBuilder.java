@@ -6,6 +6,9 @@ import cn.forbearance.mybatis.annotations.Select;
 import cn.forbearance.mybatis.annotations.Update;
 import cn.forbearance.mybatis.binding.MapperMethod;
 import cn.forbearance.mybatis.builder.MapperBuilderAssistant;
+import cn.forbearance.mybatis.executor.keygen.Jdbc3KeyGenerator;
+import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
+import cn.forbearance.mybatis.executor.keygen.NoKeyGenerator;
 import cn.forbearance.mybatis.mapping.SqlCommandType;
 import cn.forbearance.mybatis.mapping.SqlSource;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
@@ -71,6 +74,14 @@ public class MapperAnnotationBuilder {
             SqlCommandType sqlCommandType = getSqlCommandType(method);
             boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
 
+            KeyGenerator keyGenerator;
+            String keyProperty = "id";
+            if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
+                keyGenerator = configuration.isUseGeneratedKeys() ? new Jdbc3KeyGenerator() : new NoKeyGenerator();
+            } else {
+                keyGenerator = new NoKeyGenerator();
+            }
+
             String resultMapId = null;
             if (isSelect) {
                 resultMapId = parseResultMap(method);
@@ -84,6 +95,8 @@ public class MapperAnnotationBuilder {
                     parameterTypeClass,
                     resultMapId,
                     getReturnType(method),
+                    keyGenerator,
+                    keyProperty,
                     languageDriver);
         }
     }

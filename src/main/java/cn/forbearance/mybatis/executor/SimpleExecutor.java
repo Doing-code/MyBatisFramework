@@ -29,7 +29,7 @@ public class SimpleExecutor extends BaseExecutor {
         try {
             Configuration configuration = ms.getConfiguration();
             // 创建一个 StatementHandler 【MyBatis四大对象之一】
-            StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, rowBounds, resultHandler, boundSql);
+            StatementHandler handler = configuration.newStatementHandler(wrapper, ms, parameter, rowBounds, resultHandler, boundSql);
             Connection connection = transaction.getConnection();
             // 准备sql语句
             Statement stmt = handler.prepare(connection);

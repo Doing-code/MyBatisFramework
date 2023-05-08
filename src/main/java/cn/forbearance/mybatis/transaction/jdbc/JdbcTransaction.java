@@ -9,6 +9,8 @@ import java.sql.SQLException;
 
 /**
  * JDBC 事务，使用 JDBC 本身提供的能力了
+ * <p>
+ * 依赖于数据源获得的连接来管理事务范围
  *
  * @author cristina
  */
@@ -34,6 +36,10 @@ public class JdbcTransaction implements Transaction {
 
     @Override
     public Connection getConnection() throws SQLException {
+        // 多个SQL在同一个DB链接下，才能完成事务特性
+        if (null != connection) {
+            return connection;
+        }
         connection = dataSource.getConnection();
         connection.setTransactionIsolation(level.getLevel());
         connection.setAutoCommit(autoCommit);

@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.builder;
 
+import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
 import cn.forbearance.mybatis.mapping.*;
 import cn.forbearance.mybatis.refection.MetaClass;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
@@ -52,6 +53,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
      * @param parameterType
      * @param resultMap
      * @param resultType
+     * @param keyGenerator
+     * @param keyProperty
      * @param lang
      * @return
      */
@@ -61,6 +64,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
                                               Class<?> parameterType,
                                               String resultMap,
                                               Class<?> resultType,
+                                              KeyGenerator keyGenerator,
+                                              String keyProperty,
                                               LanguageDriver lang) {
         // 给id加上 namespace 前缀
         id = applyCurrentNamespace(id, false);
@@ -69,6 +74,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
                 sqlCommandType,
                 sqlSource,
                 resultType);
+
+        statementBuilder.resource(resource);
+        statementBuilder.keyGenerator(keyGenerator);
+        statementBuilder.keyProperty(keyProperty);
 
         // 结果映射，MappedStatement#resultMaps
         setStatementResultMap(resultMap, resultType, statementBuilder);

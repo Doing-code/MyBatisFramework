@@ -6,6 +6,7 @@ import cn.forbearance.mybatis.datasource.pooled.PooledDataSourceFactory;
 import cn.forbearance.mybatis.datasource.unpooled.UnPooledDataSourceFactory;
 import cn.forbearance.mybatis.executor.Executor;
 import cn.forbearance.mybatis.executor.SimpleExecutor;
+import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
 import cn.forbearance.mybatis.executor.parameter.ParameterHandler;
 import cn.forbearance.mybatis.executor.resultset.DefaultResultSetHandler;
 import cn.forbearance.mybatis.executor.resultset.ResultSetHandler;
@@ -74,6 +75,9 @@ public class Configuration {
     protected final Set<String> loadedResources = new HashSet<>();
 
     protected String databaseId;
+
+    protected boolean useGeneratedKeys = false;
+    protected final Map<String, KeyGenerator> keyGenerators = new HashMap<>();
 
     /**
      * 结果映射
@@ -198,5 +202,25 @@ public class Configuration {
 
     public void addResultMap(ResultMap resultMap) {
         resultMaps.put(resultMap.getId(), resultMap);
+    }
+
+    public void addKeyGenerator(String id, KeyGenerator keyGenerator) {
+        keyGenerators.put(id, keyGenerator);
+    }
+
+    public KeyGenerator getKeyGenerator(String id) {
+        return keyGenerators.get(id);
+    }
+
+    public boolean hasKeyGenerator(String id) {
+        return keyGenerators.containsKey(id);
+    }
+
+    public boolean isUseGeneratedKeys() {
+        return useGeneratedKeys;
+    }
+
+    public void setUseGeneratedKeys(boolean useGeneratedKeys) {
+        this.useGeneratedKeys = useGeneratedKeys;
     }
 }

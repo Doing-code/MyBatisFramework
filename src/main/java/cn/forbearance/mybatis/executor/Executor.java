@@ -39,8 +39,22 @@ public interface Executor {
      * @param boundSql
      * @param <E>
      * @return
+     * @throws SQLException
      */
     <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
+
+    /**
+     * #
+     *
+     * @param ms
+     * @param parameter
+     * @param rowBounds
+     * @param resultHandler
+     * @param <E>
+     * @return
+     * @throws SQLException
+     */
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException;
 
     /**
      * #

@@ -1,6 +1,7 @@
 package cn.forbearance.mybatis.executor.statement;
 
 import cn.forbearance.mybatis.executor.Executor;
+import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
 import cn.forbearance.mybatis.executor.parameter.ParameterHandler;
 import cn.forbearance.mybatis.executor.resultset.ResultSetHandler;
 import cn.forbearance.mybatis.mapping.BoundSql;
@@ -36,6 +37,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
         this.rowBounds = rowBounds;
 
         if (boundSql == null) {
+            generateKeys(parameterObject);
             boundSql = mappedStatement.getBoundSql(parameterObject);
         }
         this.boundSql = boundSql;
@@ -66,4 +68,9 @@ public abstract class BaseStatementHandler implements StatementHandler {
      * @throws SQLException
      */
     protected abstract Statement instantiateStatement(Connection connection) throws SQLException;
+
+    protected void generateKeys(Object parameter) {
+        KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();
+        keyGenerator.processBefore(executor, mappedStatement, null, parameter);
+    }
 }

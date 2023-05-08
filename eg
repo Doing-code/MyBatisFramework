@@ -85,3 +85,12 @@ UserMapper.xml和cn.forbearance.mybatis.test.dao.IUserDao的namespace都指向IU
       <result column="update_time" property="updateTime"/>
   </resultMap>
 ResultMapping会存到配置项中，Configuration伴随着整个session生命周期
+------------------------------------------------------------------------------------------------------------------------
+
+NoKeyGenerator 默认空实现不对主键单独处理
+Jdbc3KeyGenerator 主要用于数据库的自增主键
+SelectKeyGenerator 主要用于数据库不支持自增主键
+
+SelectKeyGenerator：在一个数据库连接中，执行两条SQL，需要保证事务特性
+
+不再同一个数据库连接下，也能执行，但是不能成功插入数据库，前后两个连接不一致，前一个sql无法commit，回滚了
