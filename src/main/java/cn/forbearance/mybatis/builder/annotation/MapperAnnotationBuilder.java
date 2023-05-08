@@ -63,6 +63,7 @@ public class MapperAnnotationBuilder {
     private void parseStatement(Method method) {
         Class<?> parameterTypeClass = getParameterType(method);
         LanguageDriver languageDriver = getLanguageDriver(method);
+        // 解析注解 select|insert|update|delete
         SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
 
         if (sqlSource != null) {

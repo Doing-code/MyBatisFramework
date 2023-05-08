@@ -1,8 +1,10 @@
 package cn.forbearance.mybatis.builder;
 
 import cn.forbearance.mybatis.mapping.*;
+import cn.forbearance.mybatis.refection.MetaClass;
 import cn.forbearance.mybatis.scripting.LanguageDriver;
 import cn.forbearance.mybatis.session.Configuration;
+import cn.forbearance.mybatis.type.TypeHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,6 +116,9 @@ public class MapperBuilderAssistant extends BaseBuilder {
     }
 
     public ResultMap addResultMap(String id, Class<?> type, List<ResultMapping> resultMappings) {
+        // 补全ID全路径，如：cn.forbearance.mybatis.test.dao.IUserDao + activityMap
+        id = applyCurrentNamespace(id, false);
+
         ResultMap.Builder inlineResultMapBuilder = new ResultMap.Builder(
                 configuration,
                 id,
@@ -123,5 +128,29 @@ public class MapperBuilderAssistant extends BaseBuilder {
         ResultMap resultMap = inlineResultMapBuilder.build();
         configuration.addResultMap(resultMap);
         return resultMap;
+    }
+
+    public ResultMapping buildResultMapping(Class<?> resultType,
+                                            String property,
+                                            String column,
+                                            List<ResultFlag> flags) {
+        Class<?> javaTypeClass = resolveResultJavaType(resultType, property, null);
+        TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, null);
+
+        ResultMapping.Builder builder = new ResultMapping.Builder(configuration, property, column, javaTypeClass);
+        builder.typeHandler(typeHandlerInstance);
+        builder.flags(flags);
+        return builder.build();
+    }
+
+    private Class<?> resolveResultJavaType(Class<?> resultType, String property, Class<?> javaType) {
+        if (javaType == null && property != null) {
+            MetaClass metaResultType = MetaClass.forClass(resultType);
+            javaType = metaResultType.getSetterType(property);
+        }
+        if (javaType == null) {
+            return Object.class;
+        }
+        return javaType;
     }
 }

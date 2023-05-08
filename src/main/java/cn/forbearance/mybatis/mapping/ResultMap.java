@@ -4,6 +4,7 @@ import cn.forbearance.mybatis.session.Configuration;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -14,11 +15,8 @@ import java.util.Set;
 public class ResultMap {
 
     private String id;
-
     private Class<?> type;
-
     private List<ResultMapping> resultMappings;
-
     private Set<String> mappedColumns;
 
     public ResultMap() {
@@ -35,6 +33,12 @@ public class ResultMap {
 
         public ResultMap build() {
             resultMap.mappedColumns = new HashSet<>();
+            for (ResultMapping mapping : resultMap.resultMappings) {
+                final String column = mapping.getColumn();
+                if (column != null) {
+                    resultMap.mappedColumns.add(column.toUpperCase(Locale.ENGLISH));
+                }
+            }
             return resultMap;
         }
     }

@@ -2,7 +2,11 @@ package cn.forbearance.mybatis.builder.xml;
 
 import cn.forbearance.mybatis.builder.BaseBuilder;
 import cn.forbearance.mybatis.builder.MapperBuilderAssistant;
+import cn.forbearance.mybatis.builder.ResultMapResolver;
 import cn.forbearance.mybatis.io.Resources;
+import cn.forbearance.mybatis.mapping.ResultFlag;
+import cn.forbearance.mybatis.mapping.ResultMap;
+import cn.forbearance.mybatis.mapping.ResultMapping;
 import cn.forbearance.mybatis.session.Configuration;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -10,6 +14,8 @@ import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -71,11 +77,75 @@ public class XmlMapperBuilder extends BaseBuilder {
             throw new RuntimeException("Mapper's namespace cannot be empty");
         }
         builderAssistant.setCurrentNamespace(namespace);
+
+        resultMapElements(element.elements("resultMap"));
+
         // select|insert|update|delete
         buildStatementFromContext(element.elements("select"),
                 element.elements("insert"),
                 element.elements("update"),
                 element.elements("delete"));
+    }
+
+    private void resultMapElements(List<Element> element) {
+        for (Element node : element) {
+            try {
+                resultMapElement(node, Collections.emptyList());
+            } catch (Exception e) {
+                // ignore, it will be retried
+            }
+        }
+    }
+
+    /**
+     * <resultMap id="activityMap" type="cn.bugstack.mybatis.test.po.Activity">
+     * <id column="id" property="id"/>
+     * <result column="activity_id" property="activityId"/>
+     * <result column="activity_name" property="activityName"/>
+     * <result column="activity_desc" property="activityDesc"/>
+     * <result column="create_time" property="createTime"/>
+     * <result column="update_time" property="updateTime"/>
+     * </resultMap>
+     *
+     * @param resultMapNode
+     * @param additionalResultMappings
+     * @throws Exception
+     */
+    private ResultMap resultMapElement(Element resultMapNode, List<ResultMapping> additionalResultMappings) throws Exception {
+        String id = resultMapNode.attributeValue("id");
+        String type = resultMapNode.attributeValue("type");
+        Class<?> typeClass = resolveAlias(type);
+
+        List<ResultMapping> resultMappings = new ArrayList<>();
+        resultMappings.addAll(additionalResultMappings);
+
+        List<Element> resultChildren = resultMapNode.elements();
+        for (Element child : resultChildren) {
+            List<ResultFlag> flags = new ArrayList<>();
+            if ("id".equals(child.getName())) {
+                flags.add(ResultFlag.ID);
+            }
+            resultMappings.add(buildResultMappingFromContext(child, typeClass, flags));
+        }
+
+        ResultMapResolver resolver = new ResultMapResolver(builderAssistant, id, typeClass, resultMappings);
+        return resolver.resolve();
+    }
+
+    /**
+     * <id column="id" property="id"/>
+     * <result column="activity_id" property="activityId"/>
+     *
+     * @param context
+     * @param resultType
+     * @param flags
+     * @return
+     * @throws Exception
+     */
+    private ResultMapping buildResultMappingFromContext(Element context, Class<?> resultType, List<ResultFlag> flags) throws Exception {
+        String property = context.attributeValue("property");
+        String column = context.attributeValue("column");
+        return builderAssistant.buildResultMapping(resultType, property, column, flags);
     }
 
     /**

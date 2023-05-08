@@ -52,7 +52,7 @@ public class ApiTest {
         user.setUserId("10002");
         user.setUserName("小白");
         user.setUserHead("1_05");
-        userDao.insertUserInfo(user);
+//        userDao.insertUserInfo(user);
         logger.info("测试结果：{}", "Insert OK");
 
         // 3. 提交事务

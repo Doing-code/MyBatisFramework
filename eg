@@ -73,3 +73,15 @@ resource、class 不能同时指向同一个文件
 </mappers>
 UserMapper.xml和cn.forbearance.mybatis.test.dao.IUserDao的namespace都指向IUserDao。
 此时会抛异常：Type interface cn.forbearance.mybatis.test.dao.IUserDao is already known to the MapperRegistry.，重复加载接口
+------------------------------------------------------------------------------------------------------------------------
+
+一个ResultMap对应多个ResultMapping
+  <resultMap id="activityMap" type="cn.forbearance.mybatis.test.po.User">
+      <id column="id" property="id"/>
+      <result column="activity_id" property="activityId"/>
+      <result column="activity_name" property="activityName"/>
+      <result column="activity_desc" property="activityDesc"/>
+      <result column="create_time" property="createTime"/>
+      <result column="update_time" property="updateTime"/>
+  </resultMap>
+ResultMapping会存到配置项中，Configuration伴随着整个session生命周期

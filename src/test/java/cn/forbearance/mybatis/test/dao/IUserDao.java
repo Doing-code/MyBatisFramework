@@ -10,18 +10,7 @@ import java.util.List;
  */
 public interface IUserDao {
 
-    @Select("SELECT id, userId, userName, userHead FROM user where id = #{id}")
-    User queryUserInfoById(Long id);
-
-    User queryUserInfo(User req);
-
-    @Select("SELECT id, userId, userName, userHead FROM user")
+//    @Select("SELECT id, user_id, user_head, user_name FROM user")
     List<User> queryUserInfoList();
-
-    int updateUserInfo(User req);
-
-    void insertUserInfo(User req);
-
-    int deleteUserInfoByUserId(String userId);
 
 }
