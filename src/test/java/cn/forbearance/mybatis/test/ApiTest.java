@@ -35,13 +35,12 @@ public class ApiTest {
         IUserDao userDao = sqlSession.getMapper(IUserDao.class);
 
         User user = new User();
-        user.setUserId("103");
-        user.setUserHead("103");
-        user.setUserName("103");
+        user.setId(null);
+
         // 3. 测试验证
-        Integer id = userDao.insert(user);
+        List<User> u = userDao.queryUserById(user);
 //        sqlSession.commit();
-        logger.info("测试结果：{}, user：{}", id, JSON.toJSONString(user));
+        logger.info("测试结果：{}, ", JSON.toJSONString(u));
 
         sqlSession.commit();
     }

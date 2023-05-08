@@ -9,20 +9,14 @@
         <result column="user_name" property="userName"/>
     </resultMap>
 
-    <select id="queryUserInfoList" resultMap="activityMap">
+    <select id="queryUserById" resultMap="activityMap">
         SELECT id, user_id, user_head, user_name FROM user
+        <trim prefix="where" prefixOverrides="AND | OR" suffixOverrides="and">
+            <if test="null != id">
+                id = #{id}
+            </if>
+        </trim>
     </select>
-
-    <insert id="insert" parameterType="cn.forbearance.mybatis.test.po.User">
-        INSERT INTO user
-        (user_id, user_head, user_name)
-        VALUES (#{userId}, #{userHead}, #{userName})
-
-        <selectKey keyProperty="id" order="AFTER" resultType="long">
-            SELECT LAST_INSERT_ID()
-        </selectKey>
-
-    </insert>
 
 
 </mapper>
