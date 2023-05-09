@@ -9,6 +9,7 @@ import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.mapping.SqlCommandType;
 import cn.forbearance.mybatis.plugin.Interceptor;
 import cn.forbearance.mybatis.session.Configuration;
+import cn.forbearance.mybatis.session.LocalCacheScope;
 import cn.forbearance.mybatis.transaction.TransactionFactory;
 import jdk.internal.util.xml.impl.Input;
 import org.dom4j.Document;
@@ -53,7 +54,9 @@ public class XmlConfigBuilder extends BaseBuilder {
      */
     public Configuration parse() {
         try {
+            // 插件
             pluginElement(root.element("plugins"));
+            settingsElement(root.element("settings"));
             environmentElement(root.element("environments"));
             // 解析映射器
             mapperElement(root.element("mappers"));
@@ -92,6 +95,24 @@ public class XmlConfigBuilder extends BaseBuilder {
             interceptorInstance.setProperties(properties);
             configuration.addInterceptor(interceptorInstance);
         }
+    }
+
+    /**
+     * <settings>
+     * 缓存级别：SESSION/STATEMENT
+     * <setting name="localCacheScope" value="SESSION"/>
+     * </settings>
+     *
+     * @param content
+     */
+    private void settingsElement(Element content) {
+        if (content == null) return;
+        List<Element> elements = content.elements();
+        Properties props = new Properties();
+        for (Element element : elements) {
+            props.setProperty(element.attributeValue("name"), element.attributeValue("value"));
+        }
+        configuration.setLocalCacheScope(LocalCacheScope.valueOf(props.getProperty("localCacheScope")));
     }
 
     /**

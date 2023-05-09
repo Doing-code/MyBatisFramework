@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.executor;
 
+import cn.forbearance.mybatis.cache.CacheKey;
 import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.session.ResultHandler;
@@ -37,11 +38,12 @@ public interface Executor {
      * @param rowBounds
      * @param resultHandler
      * @param boundSql
+     * @param key
      * @param <E>
      * @return
      * @throws SQLException
      */
-    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException;
+    <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql, CacheKey key) throws SQLException;
 
     /**
      * #
@@ -95,4 +97,20 @@ public interface Executor {
      * @param forceRollback
      */
     void close(boolean forceRollback);
+
+    /**
+     * 清空 session 缓存
+     */
+    void clearLocalCache();
+
+    /**
+     * 创建缓存 key
+     *
+     * @param ms
+     * @param parameterObject
+     * @param rowBounds
+     * @param boundSql
+     * @return
+     */
+    CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql);
 }

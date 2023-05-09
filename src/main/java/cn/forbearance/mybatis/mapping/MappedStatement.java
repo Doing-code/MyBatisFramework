@@ -28,6 +28,8 @@ public class MappedStatement {
     private String[] keyProperties;
     private String[] keyColumns;
 
+    private boolean flushCacheRequired;
+
     public MappedStatement() {
     }
 
@@ -139,5 +141,9 @@ public class MappedStatement {
 
     public KeyGenerator getKeyGenerator() {
         return keyGenerator;
+    }
+
+    public boolean isFlushCacheRequired() {
+        return flushCacheRequired;
     }
 }

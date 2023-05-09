@@ -54,4 +54,12 @@ public class BoundSql {
     public MetaObject getMetaParameters() {
         return metaParameters;
     }
+
+    public boolean hasAdditionalParameter(String name) {
+        return metaParameters.hasGetter(name);
+    }
+
+    public Object getAdditionalParameter(String name) {
+        return metaParameters.getValue(name);
+    }
 }

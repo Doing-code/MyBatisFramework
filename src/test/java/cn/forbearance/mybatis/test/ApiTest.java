@@ -35,9 +35,11 @@ public class ApiTest {
 
         // 3. 测试验证
         List<User> u = userDao.queryUserById(user);
+        List<User> u2 = userDao.queryUserById(user);
+        List<User> u3 = userDao.queryUserById(user);
         logger.info("测试结果：{}, ", JSON.toJSONString(u));
 
-        sqlSession.commit();
+//        sqlSession.commit();
     }
 
 }

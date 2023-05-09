@@ -1,12 +1,13 @@
 package cn.forbearance.mybatis.session;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
  * SqlSession 用来执行SQL，获取映射器，管理事务
  * <p>
  * 标准定义
+ * <p>
+ * 通常情况下，我们在应用程序中使用的Mybatis的API就是这个接口定义的方法。
  *
  * @author cristina
  */
@@ -80,6 +81,16 @@ public interface SqlSession {
      * Note that database connection will not be committed if no updates/deletes/inserts were called.
      */
     void commit();
+
+    /**
+     * 关闭 session
+     */
+    void close();
+
+    /**
+     * 清空 session 缓存
+     */
+    void clearCache();
 
     /**
      * 得到映射器，运用泛型方法，使得类型安全
