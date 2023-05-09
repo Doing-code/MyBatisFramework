@@ -36,6 +36,7 @@ public abstract class BaseStatementHandler implements StatementHandler {
         this.mappedStatement = mappedStatement;
         this.rowBounds = rowBounds;
 
+        // update 不会传入 boundSql 参数，所以这里要做初始化处理
         if (boundSql == null) {
             generateKeys(parameterObject);
             boundSql = mappedStatement.getBoundSql(parameterObject);
@@ -58,6 +59,11 @@ public abstract class BaseStatementHandler implements StatementHandler {
         } catch (SQLException e) {
             throw new RuntimeException("Error preparing statement.  Cause: " + e, e);
         }
+    }
+
+    @Override
+    public BoundSql getBoundSql() {
+        return boundSql;
     }
 
     /**

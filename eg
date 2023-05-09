@@ -97,3 +97,30 @@ SelectKeyGenerator：在一个数据库连接中，执行两条SQL，需要保�
 ------------------------------------------------------------------------------------------------------------------------
 
 在解析动态节点时，多用策略模式进行替换 if else，最外层 -》第二层（trim）-》第三层（if） 会执行9次 SqlNode#apply，最外层嵌套 trim 节点，第二层嵌套 if 节点，
+动态SQL节点会被封装成 MixedSqlNode，将 传入给 DynamicSqlSource ，MappedStatement#getSqlSource 时获取的就是 DynamicSqlSource；
+会执行 MixedSqlNode#apply，进行 SQL 拼接
+
+解析发生在XML解析阶段，而拼接发生在真正调用 select 阶段
+
+MixedSqlNode rootSqlNode = new MixedSqlNode(contents);
+SqlSource sqlSource;
+if (isDynamic) {
+    sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
+------------------------------------------------------------------------------------------------------------------------
+
+插件流程
+()[https://article-images.zsxq.com/FmvUDWuJMzhbO41FUsa67ui64UKc]
+以 XML 解析为入口，解析用户自定义插件，提取拦截器接口实现类，保存到配置项的拦截器链对象中。接下来在创建语句处理器 StatementHandler 时，使用代理的方式构建实现类，并把拦截器作为对象中调用过程的一部分。
+那么这个拦截器的调用是一种方法过滤判断的方式，通过拦截器实现类上配置的注解，提取要拦截的方法。当 Mybatis 框架执行到这些节点时，如调用 StatementHandler.prepare 方法时，则进行拦截器执行用户扩展的插件操作。
+
+首先是以扩展 XMLConfigBuilder 解析自定义插件配置，将自定义插件写入配置项的拦截器链中。而每一个用户实现的拦截器接口都包装了插件的代理操作。这就像是一个代理器的盒子，把原有类的行为和自定义的插件行为，使用代理包装到一个调度方法中。
+接下来是对自定义插件的激活部分，也就是把这个插件的调用挂在哪个节点下。那么这里通过在 Configuration 配置项在创建各类操作时候，把自定义插件嵌入进去。在本章节基于 StatementHandler 创建语句处理器时，使用拦截器链将定义插件包裹到 StatementHandler 目标方法中，这样在后续调用 StatementHandler 的方法时候，就顺便调用自定义实现的拦截器了。
+在 newStatementHandler、newParameterHandler、newExecutor、newResultSetHandler 这四处执行 interceptorChain.pluginAll(handler);
+org.apache.ibatis.session.Configuration#newParameterHandler
+org.apache.ibatis.session.Configuration#newResultSetHandler
+org.apache.ibatis.session.Configuration#newStatementHandler
+org.apache.ibatis.session.Configuration#newExecutor
+
+通过代理对一个目标监听方法中，完成对扩展内容的调用。
+
+

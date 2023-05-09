@@ -16,6 +16,8 @@ import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.mapping.Environment;
 import cn.forbearance.mybatis.mapping.MappedStatement;
 import cn.forbearance.mybatis.mapping.ResultMap;
+import cn.forbearance.mybatis.plugin.Interceptor;
+import cn.forbearance.mybatis.plugin.InterceptorChain;
 import cn.forbearance.mybatis.refection.MetaObject;
 import cn.forbearance.mybatis.refection.factory.DefaultObjectFactory;
 import cn.forbearance.mybatis.refection.factory.ObjectFactory;
@@ -77,12 +79,20 @@ public class Configuration {
     protected String databaseId;
 
     protected boolean useGeneratedKeys = false;
+    /**
+     * 存放键值生成器
+     */
     protected final Map<String, KeyGenerator> keyGenerators = new HashMap<>();
 
     /**
      * 结果映射
      */
     protected final Map<String, ResultMap> resultMaps = new HashMap<>();
+
+    /**
+     * 插件拦截器链
+     */
+    protected final InterceptorChain interceptorChain = new InterceptorChain();
 
     public Configuration() {
         typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
@@ -138,7 +148,11 @@ public class Configuration {
     }
 
     public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
-        return new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
+        // org.apache.ibatis.executor.statement.RoutingStatementHandler#RoutingStatementHandler
+        // 创建语句处理器，Mybatis 这里加了路由 STATEMENT、PREPARED、CALLABLE 我们默认只根据预处理进行实例化
+        StatementHandler statementHandler = new PreparedStatementHandler(executor, ms, parameter, rowBounds, resultHandler, boundSql);
+        statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
+        return statementHandler;
     }
 
     /**
@@ -222,5 +236,9 @@ public class Configuration {
 
     public void setUseGeneratedKeys(boolean useGeneratedKeys) {
         this.useGeneratedKeys = useGeneratedKeys;
+    }
+
+    public void addInterceptor(Interceptor interceptorInstance) {
+        interceptorChain.addInterceptor(interceptorInstance);
     }
 }

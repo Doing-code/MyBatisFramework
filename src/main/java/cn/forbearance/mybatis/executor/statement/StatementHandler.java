@@ -1,5 +1,6 @@
 package cn.forbearance.mybatis.executor.statement;
 
+import cn.forbearance.mybatis.mapping.BoundSql;
 import cn.forbearance.mybatis.session.ResultHandler;
 
 import java.sql.Connection;
@@ -50,4 +51,11 @@ public interface StatementHandler {
      * @throws SQLException
      */
     int update(Statement statement) throws SQLException;
+
+    /**
+     * 获取绑定SQL
+     *
+     * @return
+     */
+    BoundSql getBoundSql();
 }
