@@ -40,11 +40,7 @@ public class PerpetualCache implements Cache {
 
     @Override
     public Object getObject(Object key) {
-        Object result = cache.get(key);
-        if (null != result) {
-            log.info("一级缓存 \r\nkey：{} \r\nval：{}", key, JSON.toJSONString(result));
-        }
-        return result;
+        return cache.get(key);
     }
 
     @Override

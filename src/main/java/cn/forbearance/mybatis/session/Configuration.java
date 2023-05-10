@@ -1,9 +1,13 @@
 package cn.forbearance.mybatis.session;
 
 import cn.forbearance.mybatis.binding.MapperRegistry;
+import cn.forbearance.mybatis.cache.Cache;
+import cn.forbearance.mybatis.cache.decorators.FifoCache;
+import cn.forbearance.mybatis.cache.impl.PerpetualCache;
 import cn.forbearance.mybatis.datasource.druid.DruidDataSourceFactory;
 import cn.forbearance.mybatis.datasource.pooled.PooledDataSourceFactory;
 import cn.forbearance.mybatis.datasource.unpooled.UnPooledDataSourceFactory;
+import cn.forbearance.mybatis.executor.CachingExecutor;
 import cn.forbearance.mybatis.executor.Executor;
 import cn.forbearance.mybatis.executor.SimpleExecutor;
 import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
@@ -84,6 +88,17 @@ public class Configuration {
     protected String databaseId;
 
     protected boolean useGeneratedKeys = false;
+
+    /**
+     * 默认启用缓存
+     */
+    protected boolean cacheEnabled = true;
+
+    /**
+     * 缓存
+     */
+    protected final Map<String, Cache> caches = new HashMap<>();
+
     /**
      * 存放键值生成器
      */
@@ -106,6 +121,9 @@ public class Configuration {
         typeAliasRegistry.registerAlias("POOLED", PooledDataSourceFactory.class);
 
         languageRegistry.setDefaultDriverClass(XmlLanguageDriver.class);
+
+        typeAliasRegistry.registerAlias("PERPETUAL", PerpetualCache.class);
+        typeAliasRegistry.registerAlias("FIFO", FifoCache.class);
     }
 
     public void addMappers(String packageName) {
@@ -149,7 +167,11 @@ public class Configuration {
     }
 
     public Executor newExecutor(Transaction transaction) {
-        return new SimpleExecutor(this, transaction);
+        Executor executor = new SimpleExecutor(this, transaction);
+        if (cacheEnabled) {
+            executor = new CachingExecutor(executor);
+        }
+        return executor;
     }
 
     public StatementHandler newStatementHandler(Executor executor, MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
@@ -255,4 +277,15 @@ public class Configuration {
         this.localCacheScope = localCacheScope;
     }
 
+    public void setCacheEnabled(boolean cacheEnabled) {
+        this.cacheEnabled = cacheEnabled;
+    }
+
+    public void addCache(Cache cache) {
+        caches.put(cache.getId(), cache);
+    }
+
+    public Cache getCache(String id) {
+        return caches.get(id);
+    }
 }

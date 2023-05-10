@@ -99,6 +99,9 @@ public class XmlConfigBuilder extends BaseBuilder {
 
     /**
      * <settings>
+     * 全局缓存：true/false
+     * <setting name="cacheEnabled" value="false"/>
+     * <p>
      * 缓存级别：SESSION/STATEMENT
      * <setting name="localCacheScope" value="SESSION"/>
      * </settings>
@@ -112,6 +115,7 @@ public class XmlConfigBuilder extends BaseBuilder {
         for (Element element : elements) {
             props.setProperty(element.attributeValue("name"), element.attributeValue("value"));
         }
+        configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), true));
         configuration.setLocalCacheScope(LocalCacheScope.valueOf(props.getProperty("localCacheScope")));
     }
 

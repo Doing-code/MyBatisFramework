@@ -1,5 +1,8 @@
 package cn.forbearance.mybatis.builder;
 
+import cn.forbearance.mybatis.cache.Cache;
+import cn.forbearance.mybatis.cache.decorators.FifoCache;
+import cn.forbearance.mybatis.cache.impl.PerpetualCache;
 import cn.forbearance.mybatis.executor.keygen.KeyGenerator;
 import cn.forbearance.mybatis.mapping.*;
 import cn.forbearance.mybatis.refection.MetaClass;
@@ -9,6 +12,7 @@ import cn.forbearance.mybatis.type.TypeHandler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * 映射构建器助手，建造者
@@ -19,8 +23,8 @@ import java.util.List;
 public class MapperBuilderAssistant extends BaseBuilder {
 
     private String currentNamespace;
-
     private String resource;
+    private Cache currentCache;
 
     public MapperBuilderAssistant(Configuration configuration, String resource) {
         super(configuration);
@@ -64,6 +68,8 @@ public class MapperBuilderAssistant extends BaseBuilder {
                                               Class<?> parameterType,
                                               String resultMap,
                                               Class<?> resultType,
+                                              boolean flushCache,
+                                              boolean useCache,
                                               KeyGenerator keyGenerator,
                                               String keyProperty,
                                               LanguageDriver lang) {
@@ -79,6 +85,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
         statementBuilder.keyGenerator(keyGenerator);
         statementBuilder.keyProperty(keyProperty);
 
+        //是否是select语句
+        boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
+        setStatementCache(isSelect, flushCache, useCache, currentCache, statementBuilder);
+
         // 结果映射，MappedStatement#resultMaps
         setStatementResultMap(resultMap, resultType, statementBuilder);
 
@@ -86,6 +96,19 @@ public class MapperBuilderAssistant extends BaseBuilder {
         // 映射语句信息，建造完成存放到配置项中
         configuration.addMappedStatement(mappedStatement);
         return mappedStatement;
+    }
+
+    private void setStatementCache(
+            boolean isSelect,
+            boolean flushCache,
+            boolean useCache,
+            Cache cache,
+            MappedStatement.Builder statementBuilder) {
+        flushCache = valueOrDefault(flushCache, !isSelect);
+        useCache = valueOrDefault(useCache, isSelect);
+        statementBuilder.flushCacheRequired(flushCache);
+        statementBuilder.useCache(useCache);
+        statementBuilder.cache(cache);
     }
 
     private void setStatementResultMap(String resultMap,
@@ -161,5 +184,37 @@ public class MapperBuilderAssistant extends BaseBuilder {
             return Object.class;
         }
         return javaType;
+    }
+
+    public Cache useNewCache(Class<? extends Cache> typeClass,
+                             Class<? extends Cache> evictionClass,
+                             Long flushInterval,
+                             Integer size,
+                             boolean readWrite,
+                             boolean blocking,
+                             Properties props) {
+        // 判断为null，则用默认值
+        typeClass = valueOrDefault(typeClass, PerpetualCache.class);
+        evictionClass = valueOrDefault(evictionClass, FifoCache.class);
+
+        // 建造者模式构建 Cache [currentNamespace=cn.forbearance.mybatis.test.dao.IActivityDao]
+        Cache cache = new CacheBuilder(currentNamespace)
+                .implementation(typeClass)
+                .addDecorator(evictionClass)
+                .clearInterval(flushInterval)
+                .size(size)
+                .readWrite(readWrite)
+                .blocking(blocking)
+                .properties(props)
+                .build();
+
+        // 添加缓存
+        configuration.addCache(cache);
+        currentCache = cache;
+        return cache;
+    }
+
+    private <T> T valueOrDefault(T value, T defaultValue) {
+        return value == null ? defaultValue : value;
     }
 }

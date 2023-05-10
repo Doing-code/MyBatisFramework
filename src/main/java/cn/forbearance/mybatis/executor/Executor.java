@@ -113,4 +113,11 @@ public interface Executor {
      * @return
      */
     CacheKey createCacheKey(MappedStatement ms, Object parameterObject, RowBounds rowBounds, BoundSql boundSql);
+
+    /**
+     * 将执行器使用缓存执行器做一层装饰器的设计使用
+     *
+     * @param executor
+     */
+    void setExecutorWrapper(Executor executor);
 }

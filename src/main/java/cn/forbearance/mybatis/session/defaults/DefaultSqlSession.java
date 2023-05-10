@@ -82,7 +82,7 @@ public class DefaultSqlSession implements SqlSession {
     @Override
     public void commit() {
         try {
-            executor.commit(true);
+            executor.commit(false);
         } catch (SQLException e) {
             throw new RuntimeException("Error committing transaction.  Cause: " + e);
         }
@@ -90,7 +90,7 @@ public class DefaultSqlSession implements SqlSession {
 
     @Override
     public void close() {
-        executor.close(true);
+        executor.close(false);
     }
 
     @Override

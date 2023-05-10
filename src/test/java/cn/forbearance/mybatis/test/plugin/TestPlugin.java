@@ -15,8 +15,8 @@ import java.util.Properties;
  * @author cristina
  */
 @Intercepts({
-        @Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class}),
-        @Signature(type = StatementHandler.class, method = "parameterize", args = {Statement.class})
+        @Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class})
+//        @Signature(type = StatementHandler.class, method = "parameterize", args = {Statement.class})
 })
 public class TestPlugin implements Interceptor {
 

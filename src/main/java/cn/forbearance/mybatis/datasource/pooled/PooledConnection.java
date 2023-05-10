@@ -79,8 +79,7 @@ public class PooledConnection implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         String methodName = method.getName();
         // 调用 close() 归还连接，而非关闭连接
-        if (CLOSE.hashCode() == methodName.hashCode()
-                && CLOSE.equals(methodName)) {
+        if (CLOSE.equals(methodName)) {
             dataSource.pushConnection(this);
             return null;
         } else {

@@ -135,6 +135,7 @@ public abstract class BaseExecutor implements Executor {
         } finally {
             transaction = null;
             closed = true;
+            localCache = null;
         }
     }
 
@@ -177,6 +178,11 @@ public abstract class BaseExecutor implements Executor {
         }
 
         return cacheKey;
+    }
+
+    @Override
+    public void setExecutorWrapper(Executor executor) {
+        this.wrapper = executor;
     }
 
     private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql, CacheKey key) throws SQLException {
