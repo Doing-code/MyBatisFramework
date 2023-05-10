@@ -178,6 +178,11 @@ org.apache.ibatis.session.Configuration#newExecutor
 
 通过代理对一个目标监听方法中，完成对扩展内容的调用。
 
+1. Mybatis中插件的原理其实很简单，分为以下几步：
+2. 在项目启动的时候判断组件是否有被拦截，如果没有直接返回原对象。
+3. 如果有被拦截，返回动态代理的对象（Plugin）。
+4. 执行到的组件的中的方法时，如果不是代理对象，直接执行原方法 如果是代理对象，执行Plugin的invoke()方法。
+
 ------------------------------------------------------------------------------------------------------------------------
 
 在 Mybatis 的 XML 配置文件中，可以设置本地缓存的机制，如果不设置则是默认 SESSION 级别，也就是使用一级缓存保存会话生命周期内的数据。如果设置为 STATEMENT 则不使用一级缓存。
@@ -227,6 +232,47 @@ org.apache.ibatis.builder.MapperBuilderAssistant#addMappedStatement() -> 构建 
 ![](img/二级缓存的执行流程.jpg)
 
 ![](https://article-images.zsxq.com/FvTUIPwLhL41VpJiMf_AGiZMm8E_)
+
+------------------------------------------------------------------------------------------------------------------------
+
+MyBatis 整合 Spring
+
+Spring refresh()
+
+BeanDefinitionRegistryPostProcessor implement BeanFactoryPostProcessor
+
+invokeBeanFactoryPostProcessors(beanFactory); 调用 BeanFactoryPostProcessor 各个实现类的 postProcessBeanFactory(factory) 方法
+
+MyBatis 实现 BeanDefinitionRegistryPostProcessor 接口，重写 postProcessBeanDefinitionRegistry(factory) 方法，扫描指定路径，将扫描的 dao 接口，定义为 BeanDefinition 注册到 IOC 容器中
+
+执行到 BeanFactoryPostProcessor 时，bean 注册完成，开始准备实例化
+
+A:/usr/Software/maven-3.6.1/apache-maven-3.6.1/MAVEN_HOME/org/springframework/spring-context/5.2.10.RELEASE/spring-context-5.2.10.RELEASE-sources.jar!/org/springframework/context/support/PostProcessorRegistrationDelegate.java:119
+
+上面给出的源代码行，【优先于 beanFactory.preInstantiateSingletons();】会先尝试优先实例化实现了 BeanDefinitionRegistryPostProcessor 接口的类的属性，就可以将 sqlSessionFactory 先于实例化出来了。
+ 
+```xml
+<bean class="foo.bar.xxx">
+    <property name="referBeanName" ref="otherBeanName" />
+</bean>
+```
+在Spring的解析段，其实容器中是没有依赖的Bean的实例的因此，那么这是这个被依赖的Bean如何在BeanDefinition中表示呢？答案就是RuntimeBeanReference.
+
+在解析到依赖的Bean的时侯，解析器会依据依赖bean的name创建一个RuntimeBeanReference对像，将这个对像放入BeanDefinition的MutablePropertyValues中。
+```java
+//我们知道foo.bar.xxx 被解析为一个beanDefiniton，假设为xxxBeanDefinition
+reference = new RuntimeBeanReference("otherBeanName");
+xxxBeanDefinition.getPropertyValues().addPropertyValue("referBeanName", reference);
+```
+在创建Bean时，需要将依赖解析成真正的在Spring容器中存在的Bean。这是在getBean时由AbstractAutowireCapableBeanFactory在applyPropertyValues方法中通过BeanDefinitionValueResolver来实现的。BeanDefinitionValueResolver将真正的依赖bean和referBeanName关联起来。
+
+MyBatis 框架源码的10种设计模式分析
+
+![](https://bugstack.cn/images/article/spring/mybatis-220715-01.png)
+
+
+
+
 
 
 
