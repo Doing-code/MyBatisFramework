@@ -266,16 +266,506 @@ xxxBeanDefinition.getPropertyValues().addPropertyValue("referBeanName", referenc
 ```
 在创建Bean时，需要将依赖解析成真正的在Spring容器中存在的Bean。这是在getBean时由AbstractAutowireCapableBeanFactory在applyPropertyValues方法中通过BeanDefinitionValueResolver来实现的。BeanDefinitionValueResolver将真正的依赖bean和referBeanName关联起来。
 
+mybatis 整合 spring 后使用 SqlSessionTemplate 作为 sqlSession 进行最外层的使用，并且使用内部类代理了 SqlSession 接口的方法，在内部类 SqlSessionInterceptor#invoke 方法中，实现 openSession() 和 closeSqlSession()
+
+但 dao 接口还是使用 MapperProxy 进行代理的，只不过最外层调用的时候，sqlSession 属性是 SqlSessionTemplate 类型。
+
+比如 selectList() 方法，会先执行到 SqlSessionInterceptor 代理对象的逻辑，然后开启 openSession 获取到 DefaultSqlSession，执行到真正的 DefaultSqlSession#selectList() 方法
+
+```java
+public class SqlSessionTemplate implements SqlSession, DisposableBean
+
+this.sqlSessionProxy = (SqlSession) newProxyInstance(SqlSessionFactory.class.getClassLoader(), new Class[] { SqlSession.class }, new SqlSessionInterceptor());
+
+SqlSession sqlSession = getSqlSession(SqlSessionTemplate.this.sqlSessionFactory, SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
+        session = sessionFactory.openSession(executorType);
+```
 MyBatis 框架源码的10种设计模式分析
 
 ![](https://bugstack.cn/images/article/spring/mybatis-220715-01.png)
 
 
+<h2>建造型模式<h2/>
+<h3>简单工厂模式</h3>
+`cn.forbearance.mybatis.session.SqlSessionFactory`
+```java
+public interface SqlSessionFactory {
+    SqlSession openSession();
+}
+```
+`cn.forbearance.mybatis.session.defaults.DefaultSqlSessionFactory`
+```java
+public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
+    private final Configuration configuration;
 
+    public DefaultSqlSessionFactory(Configuration configuration) {
+        this.configuration = configuration;
+    }
 
+    @Override
+    public SqlSession openSession() {
+        Transaction tx = null;
+        try {
+            final Environment environment = configuration.getEnvironment();
+            final TransactionFactory transactionFactory = environment.getTransactionFactory();
+            tx = transactionFactory.newTransaction(environment.getDataSource(), TransactionIsolationLevel.READ_COMMITTED, false);
+            // 创建执行器
+            final Executor executor = configuration.newExecutor(tx);
+            // 创建 DefaultSqlSession
+            return new DefaultSqlSession(configuration, executor);
+        } catch (Exception e) {
+            try {
+                assert tx != null;
+                tx.close();
+            } catch (SQLException ignore) {
+            }
+            throw new RuntimeException("Error opening session.  Cause: " + e);
+        }
+    }
+}
+```
+- 简单工厂模式：简单工厂，是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例对象的类型。
 
+<h3>单例模式</h3>
+`cn.forbearance.mybatis.session.Configuration`
 
+- 单例模式：是一种创建型模式，能够包装一个类只有一个实例，并提供一个访问该实例的全局节点。
+
+Configuration 就像狗皮膏药一样大单例，贯穿整个会话的生命周期，所有的配置对象；映射、缓存、入参、出参、拦截器、注册机、对象工厂等，都在 Configuration 配置项中初始化。Configuration 会随着 SqlSessionFactoryBuilder 构建阶段完成实例化操作
+
+<h3>建造者模式<h3/>
+`cn.forbearance.mybatis.mapping.ResultMap`
+```java
+public class ResultMap {
+
+    private String id;
+    private Class<?> type;
+    private List<ResultMapping> resultMappings;
+    private Set<String> mappedColumns;
+
+    public ResultMap() {
+    }
+
+    public static class Builder {
+        private ResultMap resultMap = new ResultMap();
+
+        public Builder(Configuration configuration, String id, Class<?> type, List<ResultMapping> resultMappings) {
+            resultMap.id = id;
+            resultMap.type = type;
+            resultMap.resultMappings = resultMappings;
+        }
+
+        public ResultMap build() {
+            resultMap.mappedColumns = new HashSet<>();
+            for (ResultMapping mapping : resultMap.resultMappings) {
+                final String column = mapping.getColumn();
+                if (column != null) {
+                    resultMap.mappedColumns.add(column.toUpperCase(Locale.ENGLISH));
+                }
+            }
+            return resultMap;
+        }
+    }
+}
+```
+- 建造者模式：属于创建型模式，使用多个简单的对象一步一步构建成一个复杂的对象，它提供了一种创建对象的最佳方式。
+- 使用场景：关于 MyBatis 对建造者的使用，关于 XML 文件的解析以及各类对象的封装，都使用建造者以及建造者助手来完成对象的封装。它的核心目的就是不希望把过多的关于对象的属性设置，写到其他业务流程中，二十用建造者的方式提供最佳的边界隔离。
+- 相似场景：`SqlSessionFactoryBuilder`、`XMLConfigBuilder`、`XMLMapperBuilder`、`XMLStatementBuilder`、`CacheBuilder`
+
+<h2>结构型模式<h2/>
+<h3>适配器模式<h3/>
+MyBatis 对适配器模式的应用：不同日志框架的适配
+
+![](https://bugstack.cn/images/article/spring/mybatis-220715-05.png)
+
+```java
+// 适配器案例
+
+// 旧接口
+public interface OldApi {
+    void oldApiMethod();
+}
+
+// 新接口
+public interface NewApi {
+    void newApiMethod();
+}
+
+/**
+    适配器
+    新系统需要使用 OldApi，但是 OldApi 接口的方法不符合新系统的需求，我们需要一个新的接口来适配 OldApi 接口。这时候就可以使用适配器模式
+*/
+public class OldApiAdapter implements NewApi {
+    private OldApi oldApi;
+
+    public OldApiAdapter(OldApi oldApi) {
+        this.oldApi = oldApi;
+    }
+
+    @Override
+    public void newApiMethod() {
+        oldApi.oldApiMethod();
+    }
+}
+
+// 调用适配器的 newApiMethod() 方法来访问 OldApi 接口中的 oldApiMethod() 方法。这样，我们就通过适配器模式实现了将 OldApi 接口适配到 NewApi 接口上，以满足新系统的需求。
+public class Client {
+    public static void main(String[] args) {
+        OldApi oldApi = new OldApiImpl();
+        NewApi newApi = new OldApiAdapter(oldApi);
+        newApi.newApiMethod();
+    }
+}
+```
+- 适配器模式：是一种结构型设计模式，它能使接口不兼容的对象能够相互合作。
+
+<h3>代理模式<h3/>
+```java
+public class MapperProxy<T> implements InvocationHandler, Serializable {
+
+    private static final long serialVersionUID = 4434257806332045649L;
+
+    /**
+     * 可以理解为【接口名称+方法名称作为key】
+     */
+    private SqlSession sqlSession;
+
+    private final Class<T> mapperInterface;
+
+    private final Map<Method, MapperMethod> methodCache;
+
+    public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
+        this.sqlSession = sqlSession;
+        this.mapperInterface = mapperInterface;
+        this.methodCache = methodCache;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (Object.class.equals(method.getDeclaringClass())) {
+            return method.invoke(this, args);
+        } else {
+            final MapperMethod mapperMethod = cachedMapperMethod(method);
+            return mapperMethod.execute(sqlSession, args);
+        }
+    }
+}
+```
+![](https://bugstack.cn/images/article/spring/mybatis-220715-06.png)
+
+- 代理模式：是一种结构型秘书，能够提供对象的替代品或其占位符。代理控制着原对象的访问，并允许在将请求提交给原对象之前进行一些处理。
+- 任何一个配置 DAO 接口所调用的 CRUD 方法，都会被 MapperProxy 接管，调用到方法执行器等一系列操作，并返回最终的数据库执行结果。
+
+<h3>组合模式<h3/>
+`cn.forbearance.mybatis.scripting.xmltags.SqlNode`
+```java
+public interface SqlNode {
+    boolean apply(DynamicContext context);
+}
+```
+`cn.forbearance.mybatis.scripting.xmltags.IfSqlNode`
+```java
+public class IfSqlNode implements SqlNode {
+
+    private ExpressionEvaluator evaluator;
+    private String test;
+    private SqlNode contents;
+
+    public IfSqlNode(SqlNode contents, String test) {
+        this.test = test;
+        this.contents = contents;
+        this.evaluator = new ExpressionEvaluator();
+    }
+
+    @Override
+    public boolean apply(DynamicContext context) {
+        // 如果满足条件，则apply，
+        if (evaluator.evaluateBoolean(test, context.getBindings())) {
+            contents.apply(context);
+            return true;
+        }
+        return false;
+    }
+}
+```
+`cn.forbearance.mybatis.scripting.xmltags.XmlScriptBuilder`
+```java
+public class XmlScriptBuilder extends BaseBuilder {
+    private void initNodeHandlerMap() {
+        // 9种，实现其中2种 trim/where/set/foreach/if/choose/when/otherwise/bind
+        nodeHandlerMap.put("trim", new TrimHandler());
+        nodeHandlerMap.put("if", new IfHandler());
+    }
+
+    List<SqlNode> parseDynamicTags(Element element) {
+        List<SqlNode> contents = new ArrayList<>();
+        List<Node> children = element.content();
+        for (Node child : children) {
+            if (child.getNodeType() == Node.TEXT_NODE || child.getNodeType() == Node.CDATA_SECTION_NODE) {
+                String data = child.getText();
+                TextSqlNode textSqlNode = new TextSqlNode(data);
+                if (textSqlNode.isDynamic()) {
+                    contents.add(textSqlNode);
+                    this.isDynamic = true;
+                } else {
+                    contents.add(new StaticTextSqlNode(data));
+                }
+            } else if (child.getNodeType() == Node.ELEMENT_NODE) {
+                String nodeName = child.getName();
+                NodeHandler handler = nodeHandlerMap.get(nodeName);
+                if (handler == null) {
+                    throw new RuntimeException("Unknown element <" + nodeName + "> in SQL statement.");
+                }
+                handler.handleNode(element.element(child.getName()), contents);
+                this.isDynamic = true;
+            }
+        }
+        return contents;
+    }
+}
+```
+![](https://bugstack.cn/images/article/spring/mybatis-220715-07.png)
+
+- 组合模式：是一种结构型设计模式。使用它可以将对象组合成树状结构，并且可以通过组合模式将多个不同类型的 SqlNode 组合在一起，以一种统一的方式对他们进行操作，而不需要关系它们的具体类型。
+- 使用场景：主要体现在对各类 SQL 动态标签的解析上，以实现 SqlNode 接口的各个子类为主，而 SqlNode 接口的实现类就是每一个组合结构中的规则节点，通过规则节点的组装完成一颗规则树组合模式的使用。
+
+```java
+// 组合模式的使用案例
+
+import java.util.ArrayList;
+import java.util.List;
+
+// 定义一个图形接口 Shape，它包含了渲染和缩放两个方法
+interface Shape {
+    void render();
+    void resize(int factor);
+}
+
+// 定义具体的图形类，例如圆形、矩形和三角形
+class Circle implements Shape {
+    public void render() {
+        System.out.println("Render a circle.");
+    }
+    public void resize(int factor) {
+        System.out.println("Resize a circle by factor of " + factor + ".");
+    }
+}
+class Rectangle implements Shape {
+    public void render() {
+        System.out.println("Render a rectangle.");
+    }
+    public void resize(int factor) {
+        System.out.println("Resize a rectangle by factor of " + factor + ".");
+    }
+}
+class Triangle implements Shape {
+    public void render() {
+        System.out.println("Render a triangle.");
+    }
+    public void resize(int factor) {
+        System.out.println("Resize a triangle by factor of " + factor + ".");
+    }
+}
+
+// 定义一个组合图形类 CompositeShape，它继承自 Shape，并且包含了一个 List<Shape>，用于存储子图形：
+class CompositeShape implements Shape {
+    private List<Shape> children = new ArrayList<>();
+
+    public void add(Shape shape) {
+        children.add(shape);
+    }
+
+    public void remove(Shape shape) {
+        children.remove(shape);
+    }
+
+    public Shape getChild(int index) {
+        return children.get(index);
+    }
+
+    public void render() {
+        for (Shape child : children) {
+            child.render();
+        }
+    }
+
+    public void resize(int factor) {
+        for (Shape child : children) {
+            child.resize(factor);
+        }
+    }
+}
+
+public class CompositeDemo {
+    public static void main(String[] args) {
+        Shape circle1 = new Circle();
+        Shape circle2 = new Circle();
+        Shape rectangle = new Rectangle();
+        Shape triangle = new Triangle();
+
+        Shape composite = new CompositeShape();
+        composite.add(circle1);
+        composite.add(circle2);
+        composite.add(rectangle);
+        composite.add(triangle);
+
+        composite.render(); // 渲染所有图形
+        composite.resize(2); // 将所有图形放大两倍
+    }
+}
+/*
+输出结果为：
+
+Render a circle.
+Render a circle.
+Render a rectangle.
+Render a triangle.
+Resize a circle by factor of 2.
+Resize a circle by factor of 2.
+Resize a rectangle by factor of 2.
+Resize a triangle by factor of 2.
+*/
+```
+由于组合图形中包含了不同类型的具体图形，因此我们可以通过组合模式以一种统一的方式对它们进行操作
+
+<h3>装饰器模式<h3/>
+`cn.forbearance.mybatis.session.Configuration`
+```java
+public Executor newExecutor(Transaction transaction) {
+    Executor executor = new SimpleExecutor(this, transaction);
+    if (cacheEnabled) {
+        // 如果开启了二级缓存，创建 CachingExecutor （带有缓存的）
+        executor = new CachingExecutor(executor);
+    }
+    return executor;
+}
+```
+![](https://bugstack.cn/images/article/spring/mybatis-220715-08.png)
+
+- 装饰器模式：是一种结构型设计模式，允许你通过将对象放入包含行为的特殊封装对象中，为原对象绑定新的行为。
+- 场景介绍：MyBatis 的所有 SQL 操作，都是经过 SqlSession 会话调用 SimpleExecutor 简单执行器完成的。一级缓存的操作是在简单执行器中处理，而二级缓存是基于一级缓存刷新操作的。所以在实现上，通过创建一个缓存执行器，包装简单执行器的处理逻辑，实现二级缓存的操作，用到的就是装饰器模式。
+- 主要体现在 Cache 缓存接口的实现和 CachingExecutor 执行器中。
+
+<h2>行为型模式<h2/>
+<h3>模板模式<h3/>
+`cn.forbearance.mybatis.executor.BaseExecutor`
+```java
+public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql, CacheKey key) throws SQLException {
+    if (closed) {
+        throw new RuntimeException("Executor was closed.");
+    }
+    // 清理局部缓存，查询堆栈为0则清理。queryStack 避免递归调用清理
+    if (queryStack == 0 && ms.isFlushCacheRequired()) {
+        clearLocalCache();
+    }
+    List<E> list;
+    try {
+        queryStack++;
+        // 优先从缓存中获取数据
+        list = resultHandler == null ? (List<E>) localCache.getObject(key) : null;
+        if (list == null) {
+            list = queryFromDatabase(ms, parameter, rowBounds, resultHandler, boundSql, key);
+        }
+    } finally {
+        queryStack--;
+    }
+    if (queryStack == 0) {
+        if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
+            clearLocalCache();
+        }
+    }
+    return list;
+}
+```
+`cn.forbearance.mybatis.executor.SimpleExecutor`
+```java
+protected int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+    Statement stmt = null;
+    try {
+        Configuration configuration = ms.getConfiguration();
+        // 新建一个 StatementHandler
+        StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+        // 准备语句
+        stmt = prepareStatement(handler);
+        // StatementHandler.update
+        return handler.update(stmt);
+    } finally {
+        closeStatement(stmt);
+    }
+}
+```
+![](https://bugstack.cn/images/article/spring/mybatis-220715-09.png)
+
+- 模板模式：是一种行为设计模式，它在超类中定义了一个算法的框架，允许子类在不修改接哦古的情况下重写算法的特定步骤。
+- 场景介绍：只要存在一些列可被标准定义的流程，且流程的大部分是通用的，只有一少部分是需要子类实现的，那么通常会采用模板模式来定义出这个标注的流程。像 MyBatis 的 BaseExecutor 就是一个用于定义模板模式的抽象类，在这个类中把查询、修改的操作都定义出了一套标准的流程。
+
+<h3>策略模式<h3/>
+`cn.forbearance.mybatis.type.TypeHandler`
+```java
+public interface TypeHandler<T> {
+
+    /**
+     * 设置参数
+     *
+     * @param ps
+     * @param i
+     * @param parameter
+     * @param jdbcType
+     * @throws SQLException
+     */
+    void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
+
+    /**
+     * 获取结构
+     *
+     * @param rs
+     * @param columnName
+     * @return
+     * @throws SQLException
+     */
+    T getResult(ResultSet rs, String columnName) throws SQLException;
+
+    /**
+     * 获取结构
+     *
+     * @param rs
+     * @param columnIndex
+     * @return
+     * @throws SQLException
+     */
+    T getResult(ResultSet rs, int columnIndex) throws SQLException;
+}
+```
+`cn.forbearance.mybatis.type.LongTypeHandler`
+```java
+public class LongTypeHandler extends BaseTypeHandler<Long> {
+
+    @Override
+    protected void setNonNullParameter(PreparedStatement ps, int i, Long parameter, JdbcType jdbcType) throws SQLException {
+        ps.setLong(i, parameter);
+    }
+
+    @Override
+    protected Long getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        return rs.getLong(columnName);
+    }
+
+    @Override
+    public Long getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        return rs.getLong(columnIndex);
+    }
+}
+```
+![](https://bugstack.cn/images/article/spring/mybatis-220715-10.png)
+
+- 策略模式：是一种行为设计模式，它能定义一系列算法，并将每种算法分别放入独立的类中，以使算法的对象能够互相替换。
+- 场景介绍：在 MyBatis 处理 JDBC 执行后返回的结果时，需要按照不同的类型获取对应的值，而使用策略模式就可以避免大量的if判断。所以这里基于 TypeHandler 接口对每个类型参数分别做了对应的策略实现。
+
+<h3>迭代器模式<h3/>
+在 `cn.forbearance.mybatis.refection.property.PropertyTokenizer` 用于解析对象关系的迭代操作
+
+- 迭代器模式：是一种行为设计模式，它提供了一种访问聚合对象（如列表、树等）中各个元素的方法，而不需要暴露聚合对象的内部实现。能在不暴露集合底层表现形式的情况下遍历集合中所有的元素。
 
 
 

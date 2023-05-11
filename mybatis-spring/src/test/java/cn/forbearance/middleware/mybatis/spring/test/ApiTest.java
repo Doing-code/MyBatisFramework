@@ -23,7 +23,7 @@ public class ApiTest {
     public void test_MapperProxyFactory() throws IOException {
         BeanFactory beanFactory = new ClassPathXmlApplicationContext("spring-config.xml");
         IUserDao dao = beanFactory.getBean("IUserDao", IUserDao.class);
-        List<User> res = dao.queryUserById(new User(4L));
+        List<User> res = dao.queryUserById(new User(null));
         logger.info("测试结果：{}", JSON.toJSONString(res));
     }
 
