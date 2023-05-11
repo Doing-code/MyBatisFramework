@@ -35,7 +35,7 @@ SqlSessionFactoryBuilder 的引入包装了整个执行过程，包括：XML 文
 为什么要定义SQL执行器？
  - 解耦。
  - 抽象出一套标准，功能迭代中能方便的扩展
- 
+
 执行器贯穿始终（sqlSessionFactory.openSession(); 开始涉及到执行器）
 
 执行器中又包括了对 JDBC 处理的拆解，链接、准备语句、封装参数、处理结果，所有的这些过程经过解耦后的类和方法，就都可以在以后的功能迭代中非常方便的完成扩展了。
@@ -209,7 +209,6 @@ SqlSession 的工作主要交给 Executor 执行器完成，负责数据库的�
 
 之所以这个操作称之为二级缓存，是因为它在一级缓存会话层上，添加的额外缓存操作，当会话发生 close、commit 操作时则把数据刷新到二级缓存中进行保存，直到执行器发生 update 操作时清空缓存。
 
-
 三级缓存（自定义缓存）
 org.apache.ibatis.builder.xml.XMLMapperBuilder#cacheElement() -> builderAssistant.useNewCache(typeClass, evictionClass, flushInterval, size, readWrite, blocking, props);
 
@@ -250,13 +249,13 @@ MyBatis 实现 BeanDefinitionRegistryPostProcessor 接口，重写 postProcessBe
 A:/usr/Software/maven-3.6.1/apache-maven-3.6.1/MAVEN_HOME/org/springframework/spring-context/5.2.10.RELEASE/spring-context-5.2.10.RELEASE-sources.jar!/org/springframework/context/support/PostProcessorRegistrationDelegate.java:119
 
 上面给出的源代码行，【优先于 beanFactory.preInstantiateSingletons();】会先尝试优先实例化实现了 BeanDefinitionRegistryPostProcessor 接口的类的属性，就可以将 sqlSessionFactory 先于实例化出来了。
- 
+
 ```xml
 <bean class="foo.bar.xxx">
     <property name="referBeanName" ref="otherBeanName" />
 </bean>
 ```
-在Spring的解析段，其实容器中是没有依赖的Bean的实例的因此，那么这是这个被依赖的Bean如何在BeanDefinition中表示呢？答案就是RuntimeBeanReference.
+在Spring的解析段，其实容器中是没有依赖的Bean的实例的，那么这是这个被依赖的Bean如何在BeanDefinition中表示呢？答案就是RuntimeBeanReference.
 
 在解析到依赖的Bean的时侯，解析器会依据依赖bean的name创建一个RuntimeBeanReference对像，将这个对像放入BeanDefinition的MutablePropertyValues中。
 ```java
@@ -285,8 +284,8 @@ MyBatis 框架源码的10种设计模式分析
 ![](https://bugstack.cn/images/article/spring/mybatis-220715-01.png)
 
 
-<h2>建造型模式<h2/>
-<h3>简单工厂模式</h3>
+### 建造型模式
+#### 简单工厂模式
 `cn.forbearance.mybatis.session.SqlSessionFactory`
 ```java
 public interface SqlSessionFactory {
@@ -298,11 +297,11 @@ public interface SqlSessionFactory {
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
     private final Configuration configuration;
-
+    
     public DefaultSqlSessionFactory(Configuration configuration) {
         this.configuration = configuration;
     }
-
+    
     @Override
     public SqlSession openSession() {
         Transaction tx = null;
@@ -327,14 +326,14 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
 ```
 - 简单工厂模式：简单工厂，是一种创建型设计模式，其在父类中提供一个创建对象的方法，允许子类决定实例对象的类型。
 
-<h3>单例模式</h3>
+#### 单例模式
 `cn.forbearance.mybatis.session.Configuration`
 
 - 单例模式：是一种创建型模式，能够包装一个类只有一个实例，并提供一个访问该实例的全局节点。
 
 Configuration 就像狗皮膏药一样大单例，贯穿整个会话的生命周期，所有的配置对象；映射、缓存、入参、出参、拦截器、注册机、对象工厂等，都在 Configuration 配置项中初始化。Configuration 会随着 SqlSessionFactoryBuilder 构建阶段完成实例化操作
 
-<h3>建造者模式<h3/>
+#### 建造者模式
 `cn.forbearance.mybatis.mapping.ResultMap`
 ```java
 public class ResultMap {
@@ -373,8 +372,8 @@ public class ResultMap {
 - 使用场景：关于 MyBatis 对建造者的使用，关于 XML 文件的解析以及各类对象的封装，都使用建造者以及建造者助手来完成对象的封装。它的核心目的就是不希望把过多的关于对象的属性设置，写到其他业务流程中，二十用建造者的方式提供最佳的边界隔离。
 - 相似场景：`SqlSessionFactoryBuilder`、`XMLConfigBuilder`、`XMLMapperBuilder`、`XMLStatementBuilder`、`CacheBuilder`
 
-<h2>结构型模式<h2/>
-<h3>适配器模式<h3/>
+### 结构型模式
+#### 适配器模式
 MyBatis 对适配器模式的应用：不同日志框架的适配
 
 ![](https://bugstack.cn/images/article/spring/mybatis-220715-05.png)
@@ -420,27 +419,27 @@ public class Client {
 ```
 - 适配器模式：是一种结构型设计模式，它能使接口不兼容的对象能够相互合作。
 
-<h3>代理模式<h3/>
+#### 代理模式
 ```java
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
     private static final long serialVersionUID = 4434257806332045649L;
-
+    
     /**
      * 可以理解为【接口名称+方法名称作为key】
      */
     private SqlSession sqlSession;
-
+    
     private final Class<T> mapperInterface;
-
+    
     private final Map<Method, MapperMethod> methodCache;
-
+    
     public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
         this.sqlSession = sqlSession;
         this.mapperInterface = mapperInterface;
         this.methodCache = methodCache;
     }
-
+    
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (Object.class.equals(method.getDeclaringClass())) {
@@ -457,7 +456,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 - 代理模式：是一种结构型秘书，能够提供对象的替代品或其占位符。代理控制着原对象的访问，并允许在将请求提交给原对象之前进行一些处理。
 - 任何一个配置 DAO 接口所调用的 CRUD 方法，都会被 MapperProxy 接管，调用到方法执行器等一系列操作，并返回最终的数据库执行结果。
 
-<h3>组合模式<h3/>
+#### 组合模式
 `cn.forbearance.mybatis.scripting.xmltags.SqlNode`
 ```java
 public interface SqlNode {
@@ -490,6 +489,7 @@ public class IfSqlNode implements SqlNode {
 }
 ```
 `cn.forbearance.mybatis.scripting.xmltags.XmlScriptBuilder`
+
 ```java
 public class XmlScriptBuilder extends BaseBuilder {
     private void initNodeHandlerMap() {
@@ -629,7 +629,7 @@ Resize a triangle by factor of 2.
 ```
 由于组合图形中包含了不同类型的具体图形，因此我们可以通过组合模式以一种统一的方式对它们进行操作
 
-<h3>装饰器模式<h3/>
+#### 装饰器模式
 `cn.forbearance.mybatis.session.Configuration`
 ```java
 public Executor newExecutor(Transaction transaction) {
@@ -647,8 +647,8 @@ public Executor newExecutor(Transaction transaction) {
 - 场景介绍：MyBatis 的所有 SQL 操作，都是经过 SqlSession 会话调用 SimpleExecutor 简单执行器完成的。一级缓存的操作是在简单执行器中处理，而二级缓存是基于一级缓存刷新操作的。所以在实现上，通过创建一个缓存执行器，包装简单执行器的处理逻辑，实现二级缓存的操作，用到的就是装饰器模式。
 - 主要体现在 Cache 缓存接口的实现和 CachingExecutor 执行器中。
 
-<h2>行为型模式<h2/>
-<h3>模板模式<h3/>
+### 行为型模式
+#### 模板模式
 `cn.forbearance.mybatis.executor.BaseExecutor`
 ```java
 public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql, CacheKey key) throws SQLException {
@@ -700,7 +700,7 @@ protected int doUpdate(MappedStatement ms, Object parameter) throws SQLException
 - 模板模式：是一种行为设计模式，它在超类中定义了一个算法的框架，允许子类在不修改接哦古的情况下重写算法的特定步骤。
 - 场景介绍：只要存在一些列可被标准定义的流程，且流程的大部分是通用的，只有一少部分是需要子类实现的，那么通常会采用模板模式来定义出这个标注的流程。像 MyBatis 的 BaseExecutor 就是一个用于定义模板模式的抽象类，在这个类中把查询、修改的操作都定义出了一套标准的流程。
 
-<h3>策略模式<h3/>
+#### 策略模式
 `cn.forbearance.mybatis.type.TypeHandler`
 ```java
 public interface TypeHandler<T> {
@@ -715,7 +715,7 @@ public interface TypeHandler<T> {
      * @throws SQLException
      */
     void setParameter(PreparedStatement ps, int i, T parameter, JdbcType jdbcType) throws SQLException;
-
+    
     /**
      * 获取结构
      *
@@ -725,7 +725,7 @@ public interface TypeHandler<T> {
      * @throws SQLException
      */
     T getResult(ResultSet rs, String columnName) throws SQLException;
-
+    
     /**
      * 获取结构
      *
@@ -762,11 +762,10 @@ public class LongTypeHandler extends BaseTypeHandler<Long> {
 - 策略模式：是一种行为设计模式，它能定义一系列算法，并将每种算法分别放入独立的类中，以使算法的对象能够互相替换。
 - 场景介绍：在 MyBatis 处理 JDBC 执行后返回的结果时，需要按照不同的类型获取对应的值，而使用策略模式就可以避免大量的if判断。所以这里基于 TypeHandler 接口对每个类型参数分别做了对应的策略实现。
 
-<h3>迭代器模式<h3/>
+#### 迭代器模式
 在 `cn.forbearance.mybatis.refection.property.PropertyTokenizer` 用于解析对象关系的迭代操作
 
 - 迭代器模式：是一种行为设计模式，它提供了一种访问聚合对象（如列表、树等）中各个元素的方法，而不需要暴露聚合对象的内部实现。能在不暴露集合底层表现形式的情况下遍历集合中所有的元素。
-
 
 
 
