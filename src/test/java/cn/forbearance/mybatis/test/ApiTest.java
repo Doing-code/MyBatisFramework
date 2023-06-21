@@ -7,6 +7,7 @@ import cn.forbearance.mybatis.session.SqlSessionFactoryBuilder;
 import cn.forbearance.mybatis.test.dao.IUserDao;
 import cn.forbearance.mybatis.test.po.User;
 import com.alibaba.fastjson.JSON;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public class ApiTest {
 
     private final Logger logger = LoggerFactory.getLogger(ApiTest.class);
 
+    @Test
     public void test_MapperProxyFactory() throws IOException {
         // 1. 从SqlSessionFactory中获取SqlSession
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(Resources.getResourceAsReader("mybatis-config.xml"));
@@ -33,16 +35,16 @@ public class ApiTest {
 //        sqlSession1.close();
 
 //        SqlSession sqlSession2 = sqlSessionFactory.openSession();
-        IUserDao userDao2 = sqlSession1.getMapper(IUserDao.class);
-        List<User> u2 = userDao2.queryUserById(user);
-        sqlSession1.close();
+//        IUserDao userDao2 = sqlSession1.getMapper(IUserDao.class);
+//        List<User> u2 = userDao2.queryUserById(user);
+//        sqlSession1.close();
 
-        logger.info("测试结果：{}, ", JSON.toJSONString(u2));
+        logger.info("测试结果：{}, ", JSON.toJSONString(u1));
     }
 
 
     /*
-    * 1084456190:-1334347089:cn.forbearance.mybatis.test.dao.IUserDao.queryUserById:0:2147483647:SELECT id, user_id, user_head, user_name FROM user:development
-    * 1084456190:-1334347089:cn.forbearance.mybatis.test.dao.IUserDao.queryUserById:0:2147483647:SELECT id, user_id, user_head, user_name FROM user:development
-    * */
+     * 1084456190:-1334347089:cn.forbearance.mybatis.test.dao.IUserDao.queryUserById:0:2147483647:SELECT id, user_id, user_head, user_name FROM user:development
+     * 1084456190:-1334347089:cn.forbearance.mybatis.test.dao.IUserDao.queryUserById:0:2147483647:SELECT id, user_id, user_head, user_name FROM user:development
+     * */
 }
