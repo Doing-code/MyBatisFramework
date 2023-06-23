@@ -230,7 +230,10 @@ org.apache.ibatis.builder.MapperBuilderAssistant#addMappedStatement() -> 构建 
 
 ![](img/二级缓存的执行流程.jpg)
 
-![](https://article-images.zsxq.com/FvTUIPwLhL41VpJiMf_AGiZMm8E_)
+
+二级缓存的执行流程（代码层面）
+
+![](/img/二级缓存的执行流程_代码层面.png)
 
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -246,7 +249,7 @@ MyBatis 实现 BeanDefinitionRegistryPostProcessor 接口，重写 postProcessBe
 
 执行到 BeanFactoryPostProcessor 时，bean 注册完成，开始准备实例化
 
-A:/usr/Software/maven-3.6.1/apache-maven-3.6.1/MAVEN_HOME/org/springframework/spring-context/5.2.10.RELEASE/spring-context-5.2.10.RELEASE-sources.jar!/org/springframework/context/support/PostProcessorRegistrationDelegate.java:119
+PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
 
 上面给出的源代码行，【优先于 beanFactory.preInstantiateSingletons();】会先尝试优先实例化实现了 BeanDefinitionRegistryPostProcessor 接口的类的属性，就可以将 sqlSessionFactory 先于实例化出来了。
 

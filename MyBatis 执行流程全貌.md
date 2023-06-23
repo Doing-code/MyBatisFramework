@@ -1,1 +1,0 @@
-![](img/mybatis%20执行流程全貌.png)
